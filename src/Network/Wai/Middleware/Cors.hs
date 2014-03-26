@@ -9,6 +9,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE CPP #-}
 
 -- | An implemenation of CORS for WAI that aims to be compliant with
 -- <http://www.w3.org/TR/cors>.
@@ -27,6 +28,7 @@ module Network.Wai.Middleware.Cors
 
 import Control.Applicative
 import Control.Error
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Resource
 
@@ -46,6 +48,12 @@ import Prelude.Unicode
 
 import qualified Text.Parser.Char as P
 import qualified Text.Parser.Combinators as P
+
+#if MIN_VERSION_wai(2,0,0)
+type ReqMonad = IO
+#else
+type ReqMonad = ResourceT IO
+#endif
 
 -- | Origins are expected to be formated as described in RFC 6454 (section
 -- 6.2). In particular the string @*@ is not a valid origin (but the string
@@ -158,7 +166,7 @@ data CorsResourcePolicy = CorsResourcePolicy
 cors
     ∷ (WAI.Request → Maybe CorsResourcePolicy) -- ^ A value of 'Nothing' indicates that the resource is not available for CORS
     → WAI.Middleware
-cors policyPattern app r@WAI.Request{..}
+cors policyPattern app r
     | Just policy ← policyPattern r = case hdrOrigin of
 
         -- No origin header: requect request
@@ -175,14 +183,14 @@ cors policyPattern app r@WAI.Request{..}
 
     -- Lookup the HTTP origin request header
     --
-    hdrOrigin = lookup "origin" requestHeaders
+    hdrOrigin = lookup "origin" (WAI.requestHeaders r)
 
     -- Process a CORS request
     --
     applyCorsPolicy
         ∷ CorsResourcePolicy
         → Origin
-        → EitherT String (ResourceT IO) WAI.Response
+        → EitherT String ReqMonad WAI.Response
     applyCorsPolicy policy origin = do
 
         -- Match request origin with corsOrigins from policy
@@ -195,7 +203,7 @@ cors policyPattern app r@WAI.Request{..}
         -- Determine headers that are common to actuall responses and preflight responses
         let ch = commonCorsHeaders respOrigin (corsVaryOrigin policy)
 
-        case requestMethod of
+        case WAI.requestMethod r of
 
             -- Preflight CORS request
             "OPTIONS" → do
@@ -203,7 +211,7 @@ cors policyPattern app r@WAI.Request{..}
                 return $ WAI.responseLBS HTTP.ok200 headers ""
 
             -- Actual CORS request
-            _ → addHeaders (ch ⊕ respCorsHeaders policy) <$> lift (app r)
+            _ → lift $ app r >>= addHeaders (ch ⊕ respCorsHeaders policy)
 
     -- Compute HTTP response headers for a preflight request
     --
@@ -220,7 +228,7 @@ cors policyPattern app r@WAI.Request{..}
         Just secs → return [("Access-Control-Max-Age", sshow secs)]
 
     hdrReqMethod ∷ Monad μ ⇒ CorsResourcePolicy → EitherT String μ HTTP.ResponseHeaders
-    hdrReqMethod policy = case lookup "Access-Control-Request-Method" requestHeaders of
+    hdrReqMethod policy = case lookup "Access-Control-Request-Method" (WAI.requestHeaders r) of
         Nothing → left "Access-Control-Request-Method header is missing in CORS preflight request"
         Just x → if  x `elem` supportedMethods
             then return [("Access-Control-Allow-Methods", hdrL supportedMethods)]
@@ -234,7 +242,7 @@ cors policyPattern app r@WAI.Request{..}
          supportedMethods = corsMethods policy `union` simpleMethods
 
     hdrRequestHeader ∷ Monad μ ⇒ CorsResourcePolicy → EitherT String μ HTTP.ResponseHeaders
-    hdrRequestHeader policy = case lookup "Access-Control-Request-Headers" requestHeaders of
+    hdrRequestHeader policy = case lookup "Access-Control-Request-Headers" (WAI.requestHeaders r) of
         Nothing → return []
         Just hdrsBytes → do
             hdrs ← hoistEither $ AttoParsec.parseOnly httpHeaderNameListParser hdrsBytes
@@ -336,10 +344,15 @@ isSubsetOf l1 l2 = intersect l1 l2 ≡ l1
 
 -- Add HTTP headers to a WAI response
 --
-addHeaders ∷ HTTP.ResponseHeaders → WAI.Response → WAI.Response
-addHeaders hdrs res =
+addHeaders ∷ HTTP.ResponseHeaders → WAI.Response → ReqMonad WAI.Response
+addHeaders hdrs res = do
+#if MIN_VERSION_wai(2,0,0)
+    let (st, headers, src) = WAI.responseToSource res
+    WAI.responseSource st (headers ⊕ hdrs) <$> src return
+#else
     let (st, headers, src) = WAI.responseSource res
-    in WAI.ResponseSource st (headers ⊕ hdrs) src
+    return $ WAI.ResponseSource st (headers ⊕ hdrs) src
+#endif
 
 -- | Format a list of 'HTTP.HeaderName's such that it can be used as
 -- an HTTP header value
