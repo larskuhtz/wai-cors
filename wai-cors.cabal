@@ -16,7 +16,7 @@ License: MIT
 License-file: LICENSE
 Author: Lars Kuhtz
 Maintainer: lars@alephcloud.com
-Copyright: Copyright (c) 2014 AlephCloud, Inc.
+Copyright: Copyright (c) 2014 AlephCloud Systems, Inc.
 Category: Web
 Build-type: Simple
 Cabal-version: >= 1.14.0
