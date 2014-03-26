@@ -11,7 +11,7 @@ Description:
     Cross-Origin resource sharing (CORS) for Wai that aims to be
     compliant with <http://www.w3.org/TR/cors>.
 
-Homepage: https://github.com/orgs/alephcloud/wai-cors
+Homepage: https://github.com/alephcloud/wai-cors
 License: MIT
 License-file: LICENSE
 Author: Lars Kuhtz
@@ -28,7 +28,7 @@ data-files:
 
 source-repository head
     type: git
-    location: https://github.com/orgs/alephcloud/wai-cors
+    location: https://github.com/alephcloud/wai-cors
 
 Library
     default-language: Haskell2010
