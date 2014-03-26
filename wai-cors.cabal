@@ -1,0 +1,55 @@
+-- ------------------------------------------------------ --
+-- Copyright © 2014 AlephCloud Systems, Inc.
+-- ------------------------------------------------------ --
+
+Name: wai-cors
+Version: 0.1.0
+Synopsis: CORS for WAI
+
+Description:
+    This package provides an implemenation of
+    Cross-Origin resource sharing (CORS) for Wai that aims to be
+    compliant with <http://www.w3.org/TR/cors>.
+
+Homepage: https://github.com/orgs/alephcloud/wai-cors
+License: MIT
+License-file: LICENSE
+Author: Lars Kuhtz
+Maintainer: lars@alephcloud.com
+Copyright: Copyright (c) 2014 AlephCloud, Inc.
+Category: Web
+Build-type: Simple
+Cabal-version: >= 1.14.0
+
+data-files:
+    README.md
+    CHANGELOG.md
+    Confirmed-Constraints
+
+source-repository head
+    type: git
+    location: https://github.com/orgs/alephcloud/wai-cors
+
+Library
+    default-language: Haskell2010
+    hs-source-dirs: src
+
+    exposed-modules:
+        Network.Wai.Middleware.Cors
+
+    build-depends:
+        attoparsec >= 0.10.4.0,
+        base == 4.*,
+        base-unicode-symbols >= 0.2.2.3,
+        bytestring >= 0.10.0.2,
+        case-insensitive >= 1.0.0.1,
+        charset >= 0.3.7,
+        errors >= 1.4.1,
+        ghc-prim,
+        http-types >= 0.8.0,
+        lens >= 0.4,
+        parsers >= 0.11,
+        resourcet >= 0.4,
+        transformers >= 0.3,
+        wai >= 1.4.0
+
