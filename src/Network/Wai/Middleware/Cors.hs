@@ -11,8 +11,8 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE CPP #-}
 
--- | An implemenation of CORS for WAI that aims to be compliant with
--- <http://www.w3.org/TR/cors>.
+-- | An implemenation of Cross-Origin resource sharing (CORS) for WAI that
+-- aims to be compliant with <http://www.w3.org/TR/cors>.
 --
 module Network.Wai.Middleware.Cors
 ( CorsResourcePolicy(..)
@@ -66,13 +66,13 @@ data CorsResourcePolicy = CorsResourcePolicy
 
     -- | HTTP origins that are allowed in CORS requests.
     --
-    -- A value of 'Nothing' indicates in unrestricted cross-origin sharing and
-    -- result in @*@ as value for the @Access-Control-Allow-Origin@ HTTP
+    -- A value of 'Nothing' indicates unrestricted cross-origin sharing and
+    -- results in @*@ as value for the @Access-Control-Allow-Origin@ HTTP
     -- response header.
     --
-    -- If not 'Nothing' the value is a tuple that consits of a list of origins
-    -- and a Boolean flag that indicates if credentials are used to access the
-    -- resource via CORS.
+    -- A value other than 'Nothing' is a tuple that consists of a list of
+    -- origins each with a Boolean flag that indicates if credentials are used
+    -- to access the resource via CORS.
     --
     -- Origins must be formated as described in RFC6454 (section 6.2). In
     -- particular the string @*@ is not a valid origin (but the string @null@
@@ -86,7 +86,7 @@ data CorsResourcePolicy = CorsResourcePolicy
 
     -- | Field names of HTTP request headers that are allowed in CORS requests.
     -- Header names that are included in 'simpleHeaders', except for
-    -- @content-type@, are implicitely included an thus optionsal
+    -- @content-type@, are implicitely included an thus optional in this list.
     --
     , corsRequestHeaders ∷ ![HTTP.HeaderName]
 
@@ -98,21 +98,21 @@ data CorsResourcePolicy = CorsResourcePolicy
     --
     , corsMaxAge ∷ !(Maybe Int)
 
-    -- | If the resource if shared by multiple origins but
+    -- | If the resource is shared by multiple origins but
     -- @Access-Control-Allow-Origin@ is not set to @*@ this may be set to
     -- 'True'.
     --
     , corsVaryOrigin ∷ !Bool
 
-    -- | If 'True' verbose responses with HTTP status 400 (bad request) are
-    -- returned in case of an failure. Otherwise status 200 is used along with
-    -- an empty body.
+    -- | If this is 'True' verbose responses with HTTP status 400 (bad request)
+    -- are returned in case of a failure. Otherwise status 200 is used along
+    -- with an empty body.
     --
     , corsVerboseResponse ∷ !Bool
     }
     deriving (Show,Read,Eq,Ord)
 
--- | A basic CORS middleware.
+-- | A Cross-Origin resource sharing (CORS) middleware.
 --
 -- The middleware is given a function that serves as a pattern to decide
 -- whether a requested resource is available for CORS. If the match fails with
@@ -148,15 +148,14 @@ data CorsResourcePolicy = CorsResourcePolicy
 --
 -- /TODO/
 --
--- * We may consider adding enforcment aspects to this module:
---
---     * we may check if a request respects our origin restrictions and
---     * we may check that a CORS request respects the restrictions that we
---       publish in the preflight responses.
+-- * We may consider adding enforcment aspects to this module: we may check if
+--   a request respects our origin restrictions and we may check that a CORS
+--   request respects the restrictions that we publish in the preflight
+--   responses.
 --
 -- * Even though slightly out of scope we may (optionally) check if
 --   host header matches the actual host of the resource, since clients
---   using CORS may expect this. This is check is recommended in
+--   using CORS may expect this, since this check is recommended in
 --   <http://www.w3.org/TR/cors>.
 --
 -- * We may consider integrating CORS policy handling more
