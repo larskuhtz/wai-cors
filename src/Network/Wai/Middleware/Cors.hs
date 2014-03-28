@@ -264,7 +264,7 @@ cors policyPattern app r
     commonCorsHeaders Nothing True = [("Access-Control-Allow-Origin", "*"), ("Vary", "Origin")]
     commonCorsHeaders Nothing False = [("Access-Control-Allow-Origin", "*")]
     commonCorsHeaders (Just (o, False)) _ = [("Access-Control-Allow-Origin", o)]
-    commonCorsHeaders (Just (o, True)) _  = [("Access-Control-Allow-Origin", o), ("Acdess-Control-Allow-Credentials", "true")]
+    commonCorsHeaders (Just (o, True)) _  = [("Access-Control-Allow-Origin", o), ("Access-Control-Allow-Credentials", "true")]
 
     -- HTTP response headers that are only used with normal CORS responses
     --
