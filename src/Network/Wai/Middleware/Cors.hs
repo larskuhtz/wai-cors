@@ -120,8 +120,10 @@ data CorsResourcePolicy = CorsResourcePolicy
 -- 'Nothing' the request is passed unmodified to the inner application.
 --
 -- The current version of this module does only aim at compliance with the CORS
--- protocol as specified in <http://www.w3.org/TR/cors/>. It does not implement
--- any enforcement of authorization policies that are possibly implied by the
+-- protocol as specified in <http://www.w3.org/TR/cors/>. In accordance with
+-- that standard the role of the server side is to support the client to
+-- enforce CORS restrictions. This module does not implement any enforcement of
+-- authorization policies that are possibly implied by the
 -- 'CorsResourcePolicy'. It is up to the inner WAI application to enforce such
 -- policy and make sure that it is in accordance with the configuration of the
 -- 'cors' middleware.
