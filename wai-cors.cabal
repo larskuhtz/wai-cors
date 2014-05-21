@@ -24,7 +24,7 @@ Cabal-version: >= 1.14.0
 data-files:
     README.md
     CHANGELOG.md
-    Confirmed-Constraints
+    constraints
 
 source-repository head
     type: git
