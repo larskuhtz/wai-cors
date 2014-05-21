@@ -6,8 +6,35 @@ This package provides a Haskell implemenation of CORS for
 that aims to be compliant with
 [http://www.w3.org/TR/cors](http://www.w3.org/TR/cors).
 
+Usage
+-----
+
+The file `test/server.hs` shows how to support simple cross-origin requests (as
+defined in [http://www.w3.org/TR/cors](http://www.w3.org/TR/cors)) in a
+[scotty](http://hackage.haskell.org/package/scotty) application.
+
+~~~{.haskell}
+{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE OverloadedStrings #-}
+
+module Main
+( main
+) where
+
+import Network.Wai.Middleware.Cors
+import Web.Scotty
+
+main ∷ IO ()
+main = scotty 8080 $ do
+    middleware simpleCors
+    matchAny  "/" $ text "Success"
+~~~
+
+Documentation for more general usage can be found in the module
+[Network.Wai.Middleware.Cors](http://hackage.haskell.org/package/wai-cors/docs/Network-Wai-Middleware-Cors.html).
+
 TEST
-====
+----
 
 Currently there is only basic support to test simple cross-origin
 request from a browser.
@@ -19,5 +46,5 @@ cd test
 runHaskell server.hs
 ~~~
 
-Open the file `test/index.html` in a modern web-browser in order to
-run some simple tests.
+Open the file `test/index.html` in a modern web-browser in order to run some
+simple tests.
