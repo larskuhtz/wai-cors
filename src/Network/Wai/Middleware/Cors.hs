@@ -17,7 +17,9 @@
 module Network.Wai.Middleware.Cors
 ( Origin
 , CorsResourcePolicy(..)
+, simpleCorsResourcePolicy
 , cors
+, simpleCors
 
 -- * Utils
 , isSimple
@@ -112,6 +114,43 @@ data CorsResourcePolicy = CorsResourcePolicy
     , corsVerboseResponse ∷ !Bool
     }
     deriving (Show,Read,Eq,Ord)
+
+-- | A 'CorsResourcePolicy' that supports /simple cross-origin requests/ as defined
+-- in <http://www.w3.org/TR/cors/>.
+--
+-- * The HTTP header @Access-Control-Allow-Origin@ is set to @*@.
+--
+-- * Request methods are constraint to /simple methods/ (@GET@, @HEAD@, @POST@).
+--
+-- * Request headers are constraint to /simple request headers/
+--   (@Accept@, @Accept-Language@, @Content-Language@, @Content-Type@).
+--
+-- * If the request is a @POST@ request the content type is constraint to
+--    /simple content types/
+--    (@application/x-www-form-urlencoded@, @multipart/form-data@, @text/plain@),
+--
+-- * Only /simple response headers/ may be exposed on the client
+--   (@Cache-Control@, @Content-Language@, @Content-Type@, @Expires@, @Last-Modified@,  @Pragma@)
+--
+-- * The @Vary-Origin@ header is left unchanged (possibly unset).
+--
+-- * In case of a protocol failure the response is of status 200 along with
+--   an empty body.
+--
+-- For /simple cross-origin requests/ a preflight request is not required. However, if
+-- the client chooses to make a preflight request it is answered in accordance with
+-- the policy for /simple cross-origin requests/.
+--
+simpleCorsResourcePolicy ∷ CorsResourcePolicy
+simpleCorsResourcePolicy = CorsResourcePolicy
+    { corsOrigins = Nothing
+    , corsMethods = simpleMethods
+    , corsRequestHeaders = []
+    , corsExposedHeaders = Nothing
+    , corsMaxAge = Nothing
+    , corsVaryOrigin = False
+    , corsVerboseResponse = False
+    }
 
 -- | A Cross-Origin resource sharing (CORS) middleware.
 --
@@ -275,6 +314,20 @@ cors policyPattern app r
     respCorsHeaders policy = catMaybes
         [ fmap (\x → ("Access-Control-Expose-Headers", hdrLI x)) (corsExposedHeaders policy)
         ]
+
+-- | A CORS middleware that supports simple cross-origin requests for all
+-- resources.
+--
+-- It does not check if the resource corresponds to the restrictions for
+-- simple requests. This is in accordance with <http://www.w3.org/TR/cors/>.
+-- The client (user-agent) is supposed to enforcement CORS policy. The
+-- role of the server to provide the client with the respective policy constraints.
+--
+-- It is out of the scope of the this middleware if the server chooses to
+-- enforce rules on its resources in relation to CORS policy itself.
+--
+simpleCors ∷ WAI.Middleware
+simpleCors = cors (const $ Just simpleCorsResourcePolicy)
 
 -- -------------------------------------------------------------------------- --
 -- Definition from Standards
