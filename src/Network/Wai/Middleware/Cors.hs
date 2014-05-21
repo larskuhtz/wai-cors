@@ -15,7 +15,8 @@
 -- aims to be compliant with <http://www.w3.org/TR/cors>.
 --
 module Network.Wai.Middleware.Cors
-( CorsResourcePolicy(..)
+( Origin
+, CorsResourcePolicy(..)
 , cors
 
 -- * Utils
