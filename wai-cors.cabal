@@ -3,7 +3,7 @@
 -- ------------------------------------------------------ --
 
 Name: wai-cors
-Version: 0.1.1
+Version: 0.1.2
 Synopsis: CORS for WAI
 
 Description:
