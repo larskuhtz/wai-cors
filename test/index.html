@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+    <head> 
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script type="text/javascript">
+
+    var url = 'http://localhost:8080'
+    var simpleTest = function (label, result, method, creds, contentType, headers) {
+
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url, true);
+
+        var succ = function() {
+            $('#results').append('<p style="color:green">' + label + ': success</p>')
+        };
+
+        var fail = function() {
+            $('#results').append('<p style="color:red">' + label + ': failure</p>')
+        };
+
+        xhr.onerror = result ? fail : succ;
+        xhr.onload = result ? succ : fail;
+
+        xhr.setRequestHeader('content-type', contentType);
+
+        for (var i = 0; i < headers.length; ++i) {
+            var e = headers[i];
+            xhr.setRequestHeader(e[1], e[2]);
+        }
+        xhr.send();
+    }
+
+    $(document).ready(function() {
+        simpleTest("simple GET 1", true, "GET", false, 'text/plain', []);
+        simpleTest("simple GET 2", true, "GET", false, 'application/x-www-form-urlencoded', []);
+        simpleTest("simple GET 3", true, "GET", false, 'multipart/form-data', []);
+        simpleTest("simple GET 4", false, "GET", false, 'application/json', []);
+        simpleTest("simple GET 5", false, "GET", false, 'text/plain', [['abc','abc']]);
+
+        simpleTest("simple HEAD 1", true, "HEAD", false, 'text/plain', []);
+        simpleTest("simple HEAD 2", true, "HEAD", false, 'application/x-www-form-urlencoded', []);
+        simpleTest("simple HEAD 3", true, "HEAD", false, 'multipart/form-data', []);
+        simpleTest("simple HEAD 4", false, "HEAD", false, 'application/json', []);
+        simpleTest("simple HEAD 5", false, "HEAD", false, 'text/plain', [['abc','abc']]);
+
+        simpleTest("simple POST 1", true, "POST", false, 'text/plain', []);
+        simpleTest("simple POST 2", true, "POST", false, 'application/x-www-form-urlencoded', []);
+        simpleTest("simple POST 3", true, "POST", false, 'multipart/form-data', []);
+        simpleTest("simple POST 4", false, "POST", false, 'application/json', []);
+        simpleTest("simple POST 5", false, "POST", false, 'test/plain', [['abc','abc']]);
+
+        simpleTest("simple PUT 1", false, "PUT", false, 'text/plain', []);
+        simpleTest("simple DELETE 1", false, "DELETE", false, 'text/plain', []);
+        simpleTest("simple PATCH 1", false, "PATCH", false, 'text/plain', []);
+    });
+
+    </script>
+    </head>
+    <body>
+        <h1>Results</h1>
+        <div id="results"/>
+    </body>
+</html>
+
+

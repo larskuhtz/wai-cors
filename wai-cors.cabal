@@ -25,6 +25,8 @@ data-files:
     README.md
     CHANGELOG.md
     constraints
+    test/index.html
+    test/server.hs
 
 source-repository head
     type: git
