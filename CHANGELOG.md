@@ -1,3 +1,18 @@
+0.1.2
+=====
+
+*   Export type synonym `Origin`
+
+*   New easy-to-use middleware function `simpleCors` that supports just
+    simple cross-origin requests
+
+*   The new value `simpleCorseResourcePolicy` is a `CorseResourcePolicy`
+    for simple cross-origin requests.
+
+*   Documentation has been slightly improved
+
+*   Some code for testing `simpleCors` from a browser
+
 0.1.1
 =====
 
