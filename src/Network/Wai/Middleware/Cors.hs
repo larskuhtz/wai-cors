@@ -14,6 +14,26 @@
 -- | An implemenation of Cross-Origin resource sharing (CORS) for WAI that
 -- aims to be compliant with <http://www.w3.org/TR/cors>.
 --
+-- The function 'simpleCors' enables support of simple cross-origin requests.
+--
+-- The following is an example how to enable support for simple cross-origin requests
+-- for a <http://hackage.haskell.org/package/scotty scotty> application.
+--
+-- > {-# LANGUAGE UnicodeSyntax #-}
+-- > {-# LANGUAGE OverloadedStrings #-}
+-- >
+-- > module Main
+-- > ( main
+-- > ) where
+-- >
+-- > import Network.Wai.Middleware.Cors
+-- > import Web.Scotty
+-- >
+-- > main ∷ IO ()
+-- > main = scotty 8080 $ do
+-- >     middleware simpleCors
+-- >     matchAny  "/" $ text "Success"
+--
 module Network.Wai.Middleware.Cors
 ( Origin
 , CorsResourcePolicy(..)
@@ -176,10 +196,10 @@ simpleCorsResourcePolicy = CorsResourcePolicy
 -- for the HTTP response headers @Access-Control-Allow-Headers@ and
 -- @Access-Control-Allow-Methods@ all values specified in the
 -- 'CorsResourcePolicy' together with the respective values for simple requests
--- (except @content-type@). This does not imply that the respective values are
--- actually supported for the Resource by the application. Thus, depending on
--- the application, an actual request may still fail with 404 even if the
--- preflight request /supported/ the usage of the HTTP method with CORS.
+-- (except @content-type@). This does not imply that the application actually
+-- supports the respective values are for the requested resource. Thus,
+-- depending on the application, an actual request may still fail with 404 even
+-- if the preflight request /supported/ the usage of the HTTP method with CORS.
 --
 -- The implementation does not distinguish between simple requests and requests
 -- that require preflight. The client is free to omit a preflight request or do
@@ -190,9 +210,9 @@ simpleCorsResourcePolicy = CorsResourcePolicy
 --
 -- /TODO/
 --
--- * We may consider adding enforcment aspects to this module: we may check if
---   a request respects our origin restrictions and we may check that a CORS
---   request respects the restrictions that we publish in the preflight
+-- * We may consider adding optional enforcment aspects to this module: we may
+--   check if a request respects our origin restrictions and we may check that a
+--   CORS request respects the restrictions that we publish in the preflight
 --   responses.
 --
 -- * Even though slightly out of scope we may (optionally) check if
@@ -200,9 +220,9 @@ simpleCorsResourcePolicy = CorsResourcePolicy
 --   using CORS may expect this, since this check is recommended in
 --   <http://www.w3.org/TR/cors>.
 --
--- * We may consider integrating CORS policy handling more
---   closely with the handling of the source, for instance
---   by integrating with 'ActionM' from scotty.
+-- * We may consider integrating CORS policy handling more closely with the
+--   handling of the source, for instance by integrating with 'ActionM' from
+--   scotty.
 --
 cors
     ∷ (WAI.Request → Maybe CorsResourcePolicy) -- ^ A value of 'Nothing' indicates that the resource is not available for CORS
@@ -318,12 +338,13 @@ cors policyPattern app r
 -- | A CORS middleware that supports simple cross-origin requests for all
 -- resources.
 --
--- It does not check if the resource corresponds to the restrictions for
--- simple requests. This is in accordance with <http://www.w3.org/TR/cors/>.
--- The client (user-agent) is supposed to enforcement CORS policy. The
--- role of the server to provide the client with the respective policy constraints.
+-- This middleware does not check if the resource corresponds to the
+-- restrictions for simple requests. This is in accordance with
+-- <http://www.w3.org/TR/cors/>. The client (user-agent) is supposed to
+-- enforcement CORS policy. The role of the server is to provide the client
+-- with the respective policy constraints.
 --
--- It is out of the scope of the this middleware if the server chooses to
+-- It is out of the scope of the this module if the server chooses to
 -- enforce rules on its resources in relation to CORS policy itself.
 --
 simpleCors ∷ WAI.Middleware
@@ -397,7 +418,7 @@ sshow = fromString ∘ show
 isSubsetOf ∷ Eq α ⇒ [α] → [α] → Bool
 isSubsetOf l1 l2 = intersect l1 l2 ≡ l1
 
--- Add HTTP headers to a WAI response
+-- | Add HTTP headers to a WAI response
 --
 addHeaders ∷ HTTP.ResponseHeaders → WAI.Response → ReqMonad WAI.Response
 addHeaders hdrs res = do
