@@ -1,3 +1,22 @@
+0.2
+===
+
+This version may break existing code by changing the type of
+`CorsResourcePolicy`.
+
+This version changes the behavior of `simpleCorsResourcePolicy`: Before
+it was a failure when the request didn't contain an @Origin@ header.
+With this version the request is passed unchanged to the application.
+If an failure occurs during CORS processing the response has HTTP status
+400 (bad request) and contains a short error messages. This behavior
+can be changed with the new settings `corsRequireOrigin` and
+`corsIgnorefailure`.
+
+*   Remove setting `corsVerboseResponse` from `CorsResourcePolicy`.
+
+*   Add new settings `corsRequireOrigin` and `corsIgnoreFailure` to
+    `CorsResourcePolicy`.
+
 0.1.4
 =====
 
