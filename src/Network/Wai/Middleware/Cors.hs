@@ -51,6 +51,7 @@ module Network.Wai.Middleware.Cors
 
 import Control.Applicative
 import Control.Error
+import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Resource
@@ -227,20 +228,33 @@ simpleCorsResourcePolicy = CorsResourcePolicy
 cors
     ∷ (WAI.Request → Maybe CorsResourcePolicy) -- ^ A value of 'Nothing' indicates that the resource is not available for CORS
     → WAI.Middleware
+#if MIN_VERSION_wai(3,0,0)
+cors policyPattern app r respond
+#else
 cors policyPattern app r
+#endif
     | Just policy ← policyPattern r = case hdrOrigin of
 
         -- No origin header: requect request
-        Nothing → return $ corsFailure (corsVerboseResponse policy) "Origin header is missing"
+        Nothing → res $ corsFailure (corsVerboseResponse policy) "Origin header is missing"
 
         -- Origin header: apply CORS policy to request
-        Just origin → runEitherT (applyCorsPolicy policy origin) >>= \case
-                Left e → return $ corsFailure (corsVerboseResponse policy) (B8.pack e)
-                Right response → return response
+        Just origin → applyCorsPolicy policy origin
 
-    | otherwise = app r
+    | otherwise =
+#if MIN_VERSION_wai(3,0,0)
+        app r respond
+#else
+        app r
+#endif
 
   where
+
+#if MIN_VERSION_wai(3,0,0)
+    res = respond
+#else
+    res = return
+#endif
 
     -- Lookup the HTTP origin request header
     --
@@ -248,31 +262,42 @@ cors policyPattern app r
 
     -- Process a CORS request
     --
-    applyCorsPolicy
-        ∷ CorsResourcePolicy
-        → Origin
-        → EitherT String ReqMonad WAI.Response
+    --applyCorsPolicy
+    --    ∷ CorsResourcePolicy
+    --    → Origin
+    --    → EitherT String ReqMonad WAI.Response
     applyCorsPolicy policy origin = do
 
+        -- The error continuation
+        let err e = res $ corsFailure (corsVerboseResponse policy) (B8.pack e)
+
         -- Match request origin with corsOrigins from policy
-        respOrigin ← case corsOrigins policy of
-            Nothing → return Nothing
-            Just (originList, withCreds) → if origin `elem` originList
-                then return $ Just (origin, withCreds)
-                else left $ "Unsupported origin: " ⊕ B8.unpack origin
+        let respOrigin = case corsOrigins policy of
+                Nothing → return Nothing
+                Just (originList, withCreds) → if origin `elem` originList
+                    then Right $ Just (origin, withCreds)
+                    else Left $ "Unsupported origin: " ⊕ B8.unpack origin
 
-        -- Determine headers that are common to actuall responses and preflight responses
-        let ch = commonCorsHeaders respOrigin (corsVaryOrigin policy)
+        case respOrigin of
+            Left e → err e
+            Right respOrigin → do
 
-        case WAI.requestMethod r of
+                -- Determine headers that are common to actuall responses and preflight responses
+                let ch = commonCorsHeaders respOrigin (corsVaryOrigin policy)
 
-            -- Preflight CORS request
-            "OPTIONS" → do
-                headers ← (⊕) <$> pure ch <*> preflightHeaders policy
-                return $ WAI.responseLBS HTTP.ok200 headers ""
+                case WAI.requestMethod r of
 
-            -- Actual CORS request
-            _ → lift $ app r >>= addHeaders (ch ⊕ respCorsHeaders policy)
+                    -- Preflight CORS request
+                    "OPTIONS" → runEitherT (preflightHeaders policy) >>= \case
+                        Left e → err e
+                        Right headers → res $ WAI.responseLBS HTTP.ok200 (ch ⊕ headers) ""
+
+                    -- Actual CORS request
+#if MIN_VERSION_wai(3,0,0)
+                    _ → addHeaders (ch ⊕ respCorsHeaders policy) app r respond
+#else
+                    _ → addHeaders (ch ⊕ respCorsHeaders policy) app r
+#endif
 
     -- Compute HTTP response headers for a preflight request
     --
@@ -420,13 +445,25 @@ isSubsetOf l1 l2 = intersect l1 l2 ≡ l1
 
 -- | Add HTTP headers to a WAI response
 --
-addHeaders ∷ HTTP.ResponseHeaders → WAI.Response → ReqMonad WAI.Response
-addHeaders hdrs res = do
-#if MIN_VERSION_wai(2,0,0)
-    let (st, headers, src) = WAI.responseToSource res
+#if MIN_VERSION_wai(3,0,0)
+addHeaders ∷ HTTP.ResponseHeaders → WAI.Middleware
+addHeaders hdrs app req respond = app req $ \response → do
+    let (st, headers, streamHandle) = WAI.responseToStream response
+    streamHandle $ \streamBody →
+        respond $ WAI.responseStream st (headers ⊕ hdrs) streamBody
+
+#elif MIN_VERSION_wai(2,0,0)
+
+addHeaders ∷ HTTP.ResponseHeaders → WAI.Middleware
+addHeaders hdrs app req = do
+    (st, headers, src) ← WAI.responseToSource <$> app req
     WAI.responseSource st (headers ⊕ hdrs) <$> src return
+
 #else
-    let (st, headers, src) = WAI.responseSource res
+
+addHeaders ∷ HTTP.ResponseHeaders → WAI.Middleware
+addHeaders hdrs app req = do
+    (st, headers, src) ← WAI.responseSource <$> app req
     return $ WAI.ResponseSource st (headers ⊕ hdrs) src
 #endif
 
