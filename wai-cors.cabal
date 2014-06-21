@@ -8,14 +8,16 @@ Synopsis: CORS for WAI
 
 Description:
     This package provides an implemenation of
-    Cross-Origin resource sharing (CORS) for Wai that aims to be
-    compliant with <http://www.w3.org/TR/cors>.
+    Cross-Origin resource sharing (CORS) for
+    <http://hackage.haskell.org/package/wai Wai>
+    that aims to be compliant with <http://www.w3.org/TR/cors>.
 
 Homepage: https://github.com/alephcloud/wai-cors
+Bug-reports: https://github.com/alephcloud/wai-cors/issues
 License: MIT
 License-file: LICENSE
-Author: Lars Kuhtz
-Maintainer: lars@alephcloud.com
+Author: Lars Kuhtz <lars@alephcloud.com>
+Maintainer: Lars Kuhtz <lars@alephcloud.com>
 Copyright: Copyright (c) 2014 AlephCloud Systems, Inc.
 Category: Web
 Build-type: Simple
