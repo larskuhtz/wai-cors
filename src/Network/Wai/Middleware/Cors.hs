@@ -128,11 +128,34 @@ data CorsResourcePolicy = CorsResourcePolicy
     --
     , corsVaryOrigin ∷ !Bool
 
-    -- | If this is 'True' verbose responses with HTTP status 400 (bad request)
-    -- are returned in case of a failure. Otherwise status 200 is used along
-    -- with an empty body.
+    -- | If this is 'True' and the request does not include an @Origin@ header
+    -- the response has HTTP status 400 (bad request) and the body contains
+    -- a short error message.
     --
-    , corsVerboseResponse ∷ !Bool
+    -- If this is 'False' and the request does not include an @Origin@ header
+    -- the request is passed on unchanged to the application.
+    --
+    -- /since version 0.2/
+    , corsRequireOrigin ∷ !Bool
+
+    -- | In the case that
+    --
+    -- * the request contains an @Origin@ header and
+    --
+    -- * the client does not conform with the CORS protocol
+    --   (/request is out of scope/)
+    --
+    -- then
+    --
+    -- * the request is passed on unchanged to the application if this field is
+    --   'True' or
+    --
+    -- * an response with HTTP status 400 (bad request) and short
+    --   error message is returned if this field is 'False'.
+    --
+    -- /since version 0.2/
+    --
+    , corsIgnoreFailures ∷ !Bool
     }
     deriving (Show,Read,Eq,Ord)
 
@@ -155,8 +178,12 @@ data CorsResourcePolicy = CorsResourcePolicy
 --
 -- * The @Vary-Origin@ header is left unchanged (possibly unset).
 --
--- * In case of a protocol failure the response is of status 200 along with
---   an empty body.
+-- * If the request doesn't include an @Origin@ header the request is passed unchanged to
+--   the application.
+--
+-- * If the request includes an @Origin@ header but does not conform to the CORS
+--   protocol (/request is out of scope/) an response with HTTP status 400 (bad request)
+--   and a short error message is returned.
 --
 -- For /simple cross-origin requests/ a preflight request is not required. However, if
 -- the client chooses to make a preflight request it is answered in accordance with
@@ -170,7 +197,8 @@ simpleCorsResourcePolicy = CorsResourcePolicy
     , corsExposedHeaders = Nothing
     , corsMaxAge = Nothing
     , corsVaryOrigin = False
-    , corsVerboseResponse = False
+    , corsRequireOrigin = False
+    , corsIgnoreFailures = False
     }
 
 -- | A Cross-Origin resource sharing (CORS) middleware.
@@ -236,24 +264,22 @@ cors policyPattern app r
     | Just policy ← policyPattern r = case hdrOrigin of
 
         -- No origin header: requect request
-        Nothing → res $ corsFailure (corsVerboseResponse policy) "Origin header is missing"
+        Nothing → if corsRequireOrigin policy
+            then res $ corsFailure "Origin header is missing"
+            else runApp
 
         -- Origin header: apply CORS policy to request
         Just origin → applyCorsPolicy policy origin
 
-    | otherwise =
-#if MIN_VERSION_wai(3,0,0)
-        app r respond
-#else
-        app r
-#endif
-
+    | otherwise = runApp
   where
 
 #if MIN_VERSION_wai(3,0,0)
     res = respond
+    runApp = app r respond
 #else
     res = return
+    runApp = app r
 #endif
 
     -- Lookup the HTTP origin request header
@@ -262,14 +288,12 @@ cors policyPattern app r
 
     -- Process a CORS request
     --
-    --applyCorsPolicy
-    --    ∷ CorsResourcePolicy
-    --    → Origin
-    --    → EitherT String ReqMonad WAI.Response
     applyCorsPolicy policy origin = do
 
         -- The error continuation
-        let err e = res $ corsFailure (corsVerboseResponse policy) (B8.pack e)
+        let err e = if corsIgnoreFailures policy
+            then runApp
+            else res $ corsFailure (B8.pack e)
 
         -- Match request origin with corsOrigins from policy
         let respOrigin = case corsOrigins policy of
@@ -480,9 +504,7 @@ hdrL ∷ [B8.ByteString] → B8.ByteString
 hdrL l = B8.intercalate ", " l
 
 corsFailure
-    ∷ Bool          -- ^ whether to generate a verbose 400 response
-    → B8.ByteString -- ^ body
+    ∷ B8.ByteString -- ^ body
     → WAI.Response
-corsFailure True msg = WAI.responseLBS HTTP.status400 [("Content-Type", "text/html; charset-utf-8")] (LB8.fromStrict msg)
-corsFailure False _ = WAI.responseLBS HTTP.ok200 [] ""
+corsFailure msg = WAI.responseLBS HTTP.status400 [("Content-Type", "text/html; charset-utf-8")] (LB8.fromStrict msg)
 
