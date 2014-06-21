@@ -3,7 +3,7 @@
 -- ------------------------------------------------------ --
 
 Name: wai-cors
-Version: 0.1.3
+Version: 0.1.4
 Synopsis: CORS for WAI
 
 Description:
@@ -33,6 +33,11 @@ data-files:
 source-repository head
     type: git
     location: https://github.com/alephcloud/wai-cors
+
+source-repository this
+    type: git
+    location: https://github.com/alephcloud/wai-cors
+    tag: 0.1.4
 
 Library
     default-language: Haskell2010
