@@ -34,6 +34,11 @@
 -- >     middleware simpleCors
 -- >     matchAny  "/" $ text "Success"
 --
+-- The result of following curl command will include the HTTP response header
+-- @Access-Control-Allow-Origin: *@.
+--
+-- > curl -i http://127.0.0.1:8888 -H 'Origin: 127.0.0.1' -v
+--
 module Network.Wai.Middleware.Cors
 ( Origin
 , CorsResourcePolicy(..)
