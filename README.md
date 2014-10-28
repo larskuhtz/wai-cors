@@ -32,6 +32,13 @@ main = scotty 8080 $ do
     matchAny  "/" $ text "Success"
 ~~~
 
+The result of following curl command will include the HTTP response 
+header `Access-Control-Allow-Origin: *`.
+
+~~~{.bash}
+curl -i http://127.0.0.1:8888 -H 'Origin: 127.0.0.1' -v
+~~~
+
 Documentation for more general usage can be found in the module
 [Network.Wai.Middleware.Cors](http://hackage.haskell.org/package/wai-cors/docs/Network-Wai-Middleware-Cors.html).
 
