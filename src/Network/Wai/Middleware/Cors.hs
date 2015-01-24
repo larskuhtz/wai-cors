@@ -464,7 +464,7 @@ httpHeaderNameParser = fromString <$> P.some (P.oneOfSet httpHeaderNameCharSet) 
 -- Generic Tools
 
 httpHeaderNameListParser ∷ P.CharParsing μ ⇒ μ [HTTP.HeaderName]
-httpHeaderNameListParser = P.spaces *> P.sepBy1 (httpHeaderNameParser <* P.spaces) (P.char ',') <* P.spaces
+httpHeaderNameListParser = P.spaces *> P.sepBy (httpHeaderNameParser <* P.spaces) (P.char ',') <* P.spaces
 
 sshow ∷ (IsString α, Show β) ⇒ β → α
 sshow = fromString ∘ show
