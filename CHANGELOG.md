@@ -1,3 +1,9 @@
+0.2.1
+=====
+
+*   Fix [bug #8](https://github.com/alephcloud/wai-cors/issues/8).
+    Accept empty list as value for `Access-Control-Request-Headers`.
+
 0.2
 ===
 
