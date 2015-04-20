@@ -54,19 +54,26 @@ module Network.Wai.Middleware.Cors
 , simpleMethods
 ) where
 
-import Control.Applicative
-import Control.Error
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Resource
+#ifndef MIN_VESION_base
+#define MIN_VESION_base(x,y,z) 1
+#endif
 
-import qualified Data.Attoparsec as AttoParsec
+#if ! MIN_VERSION_base(4,8,0)
+import Control.Applicative
+#endif
+import Control.Monad.Error.Class
+import Control.Monad.Trans.Except
+#if ! MIN_VERSION_wai(2,0,0)
+import Control.Monad.Trans.Resource
+#endif
+
+import qualified Data.Attoparsec.ByteString as AttoParsec
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy.Char8 as LB8
 import qualified Data.CaseInsensitive as CI
 import qualified Data.CharSet as CS
 import Data.List (intersect, (\\), union)
+import Data.Maybe (catMaybes)
 import Data.Monoid.Unicode
 import Data.String
 
@@ -317,7 +324,7 @@ cors policyPattern app r
                 case WAI.requestMethod r of
 
                     -- Preflight CORS request
-                    "OPTIONS" → runEitherT (preflightHeaders policy) >>= \case
+                    "OPTIONS" → runExceptT (preflightHeaders policy) >>= \case
                         Left e → err e
                         Right headers → res $ WAI.responseLBS HTTP.ok200 (ch ⊕ headers) ""
 
@@ -330,24 +337,24 @@ cors policyPattern app r
 
     -- Compute HTTP response headers for a preflight request
     --
-    preflightHeaders ∷ Monad μ ⇒ CorsResourcePolicy → EitherT String μ HTTP.ResponseHeaders
+    preflightHeaders ∷ (Functor μ, Monad μ) ⇒ CorsResourcePolicy → ExceptT String μ HTTP.ResponseHeaders
     preflightHeaders policy = concat <$> sequence
         [ hdrReqMethod policy
         , hdrRequestHeader policy
         , hdrMaxAge policy
         ]
 
-    hdrMaxAge ∷ Monad μ ⇒ CorsResourcePolicy → EitherT String μ HTTP.ResponseHeaders
+    hdrMaxAge ∷ Monad μ ⇒ CorsResourcePolicy → ExceptT String μ HTTP.ResponseHeaders
     hdrMaxAge policy = case corsMaxAge policy of
         Nothing → return []
         Just secs → return [("Access-Control-Max-Age", sshow secs)]
 
-    hdrReqMethod ∷ Monad μ ⇒ CorsResourcePolicy → EitherT String μ HTTP.ResponseHeaders
+    hdrReqMethod ∷ Monad μ ⇒ CorsResourcePolicy → ExceptT String μ HTTP.ResponseHeaders
     hdrReqMethod policy = case lookup "Access-Control-Request-Method" (WAI.requestHeaders r) of
-        Nothing → left "Access-Control-Request-Method header is missing in CORS preflight request"
+        Nothing → throwError "Access-Control-Request-Method header is missing in CORS preflight request"
         Just x → if  x `elem` supportedMethods
             then return [("Access-Control-Allow-Methods", hdrL supportedMethods)]
-            else left
+            else throwError
                 $ "Method requested in Access-Control-Request-Method of CORS request is not supported; requested: "
                 ⊕ B8.unpack x
                 ⊕ "; supported are "
@@ -356,14 +363,14 @@ cors policyPattern app r
       where
          supportedMethods = corsMethods policy `union` simpleMethods
 
-    hdrRequestHeader ∷ Monad μ ⇒ CorsResourcePolicy → EitherT String μ HTTP.ResponseHeaders
+    hdrRequestHeader ∷ Monad μ ⇒ CorsResourcePolicy → ExceptT String μ HTTP.ResponseHeaders
     hdrRequestHeader policy = case lookup "Access-Control-Request-Headers" (WAI.requestHeaders r) of
         Nothing → return []
         Just hdrsBytes → do
-            hdrs ← hoistEither $ AttoParsec.parseOnly httpHeaderNameListParser hdrsBytes
+            hdrs ← either throwError return $ AttoParsec.parseOnly httpHeaderNameListParser hdrsBytes
             if hdrs `isSubsetOf` supportedHeaders
                 then return [("Access-Control-Allow-Headers", hdrLI supportedHeaders)]
-                else left
+                else throwError
                     $ "HTTP header requested in Access-Control-Request-Headers of CORS request is not supported; requested: "
                     ⊕ B8.unpack (hdrLI hdrs)
                     ⊕ "; supported are "
