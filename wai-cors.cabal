@@ -39,8 +39,13 @@ source-repository this
     location: https://github.com/alephcloud/wai-cors
     tag: 0.2.1
 
-flag transformers-three
-    description: use version three of transformers package (this is set automatically)
+flag transformers-3
+    description: use transformers<0.3 (this is set automatically)
+    default: False
+    manual: False
+
+flag wai-1
+    description: use version wai<2 (this is set automatically)
     default: False
     manual: False
 
@@ -58,18 +63,24 @@ Library
         bytestring >= 0.10.0.2,
         case-insensitive >= 1.0.0.1,
         charset >= 0.3.7,
-        errors >= 1.4.1,
         http-types >= 0.8.0,
-        parsers >= 0.11,
-        resourcet >= 0.4,
-        transformers >= 0.3
+        parsers >= 0.11
 
-    if flag(transformers-three)
+    if flag (wai-1)
         build-depends:
-            wai >= 1.4.0,
-            transformers >= 0.3
+            wai < 2.0,
+            resourcet >= 0.4
     else
         build-depends:
-            wai >= 2.0,
+            wai >= 2.0
+
+    if flag(transformers-3)
+        build-depends:
+            mtl >= 2.1,
+            transformers >= 0.3 && < 0.4,
+            transformers-compat >= 0.3
+    else
+        build-depends:
+            mtl >= 2.2,
             transformers >= 0.4
 
