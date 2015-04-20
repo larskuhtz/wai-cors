@@ -3,7 +3,7 @@
 -- ------------------------------------------------------ --
 
 Name: wai-cors
-Version: 0.2.1
+Version: 0.2.2
 Synopsis: CORS for WAI
 
 Description:
@@ -37,7 +37,7 @@ source-repository head
 source-repository this
     type: git
     location: https://github.com/alephcloud/wai-cors
-    tag: 0.2.1
+    tag: 0.2.2
 
 flag transformers-3
     description: use transformers<0.3 (this is set automatically)

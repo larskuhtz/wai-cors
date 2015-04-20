@@ -1,3 +1,10 @@
+0.2.2
+=====
+
+*   Support GHC-7.10/base-4.8 without compiler warnings.
+
+*   Drop dependency on errors package.
+
 0.2.1
 =====
 
