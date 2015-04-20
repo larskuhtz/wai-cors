@@ -54,7 +54,13 @@ module Network.Wai.Middleware.Cors
 , simpleMethods
 ) where
 
+#ifndef MIN_VESION_base
+#define MIN_VESION_base(x,y,z) 1
+#endif
+
+#if ! MIN_VERSION_base(4,8,0)
 import Control.Applicative
+#endif
 import Control.Monad.Error.Class
 import Control.Monad.Trans.Except
 #if ! MIN_VERSION_wai(2,0,0)
