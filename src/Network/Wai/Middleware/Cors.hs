@@ -67,7 +67,7 @@ import Control.Monad.Trans.Except
 import Control.Monad.Trans.Resource
 #endif
 
-import qualified Data.Attoparsec as AttoParsec
+import qualified Data.Attoparsec.ByteString as AttoParsec
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy.Char8 as LB8
 import qualified Data.CaseInsensitive as CI
