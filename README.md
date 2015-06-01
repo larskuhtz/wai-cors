@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/alephcloud/wai-cors.svg?branch=master)](https://travis-ci.org/alephcloud/wai-cors)
+[![Build Status](https://travis-ci.org/larskuhtz/wai-cors.svg?branch=master)](https://travis-ci.org/larskuhtz/wai-cors)
 
 Cross-Origin Resource Sharing (CORS) For Wai
 ============================================
