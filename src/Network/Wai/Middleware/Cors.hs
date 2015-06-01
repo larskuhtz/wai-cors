@@ -147,7 +147,7 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- If this is 'False' and the request does not include an @Origin@ header
     -- the request is passed on unchanged to the application.
     --
-    -- /since version 0.2/
+    -- @since 0.2
     , corsRequireOrigin ∷ !Bool
 
     -- | In the case that
@@ -165,7 +165,7 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- * an response with HTTP status 400 (bad request) and short
     --   error message is returned if this field is 'False'.
     --
-    -- /since version 0.2/
+    -- @since 0.2
     --
     , corsIgnoreFailures ∷ !Bool
     }
