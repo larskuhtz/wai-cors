@@ -1,3 +1,16 @@
+0.2.3
+=====
+
+*   Added a test-suite to the package that uses PhantomJS to simulate a
+    browser client.
+
+*   Pass on websocket requests unchanged to the application. Add documentation
+    that reminds the application author to check the `Origin` header for
+    websocket requests.
+
+*   Move development source repository from https://github.com/alephcloud/wai-cors
+    to https://github.com/larskuhtz/wai-cors.
+
 0.2.2
 =====
 
