@@ -1,4 +1,5 @@
 -- ------------------------------------------------------ --
+-- Copyright © 2015 Lars Kuhtz <lakuhtz@gmail.com>
 -- Copyright © 2014 AlephCloud Systems, Inc.
 -- ------------------------------------------------------ --
 
@@ -26,6 +27,14 @@
 -- recommended to take into account the security considerations in section 6.3
 -- of <http://wwww.w3.org/TR/cors>. In particular the application should check
 -- that the value of the @Origin@ header matches it's expectations.
+--
+-- = Websockets
+--
+-- Websocket connections don't support CORS and are ignored by this CORS
+-- implementation. However Websocket requests usually (at least for some
+-- browsers) include the @Origin@ header. Applications are expected to check
+-- the value of this header and respond with an error in case that its content
+-- doesn't match the expectations.
 --
 -- = Example
 --
@@ -290,6 +299,9 @@ cors policyPattern app r respond
 #else
 cors policyPattern app r
 #endif
+    -- We don't handle websockets, even if they include an @Origin@ header
+    | isWebSocketsReq r = runApp
+
     | Just policy ← policyPattern r = case hdrOrigin of
 
         -- No origin header: requect request
@@ -536,4 +548,12 @@ corsFailure
     ∷ B8.ByteString -- ^ body
     → WAI.Response
 corsFailure msg = WAI.responseLBS HTTP.status400 [("Content-Type", "text/html; charset-utf-8")] (LB8.fromStrict msg)
+
+-- Copied from the [wai-websocket package](https://github.com/yesodweb/wai/blob/master/wai-websockets/Network/Wai/Handler/WebSockets.hs#L21)
+--
+isWebSocketsReq
+    ∷ WAI.Request
+    → Bool
+isWebSocketsReq req =
+    fmap CI.mk (lookup "upgrade" $ WAI.requestHeaders req) == Just "websocket"
 

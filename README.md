@@ -18,6 +18,12 @@ into account the security considerations in section 6.3 of the
 [CORS standard](http://wwww.w3.org/TR/cors). In particular the application should
 check that the value of the `Origin` header matches it's expectations.
 
+Websocket connections don't support CORS and are ignored by the CORS implementation
+in this package. However Websocket requests usually (at least for some
+browsers) include the @Origin@ header. Applications are expected to check the
+value of this header and respond with an error in case that its content doesn't
+match the expectations.
+
 Installation
 ------------
 
