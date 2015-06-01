@@ -1,4 +1,5 @@
 -- ------------------------------------------------------ --
+-- Copyright © 2015 Lars Kuhtz <lars@gmail.com>
 -- Copyright © 2014 AlephCloud Systems, Inc.
 -- ------------------------------------------------------ --
 
@@ -12,13 +13,13 @@ Description:
     <http://hackage.haskell.org/package/wai Wai>
     that aims to be compliant with <http://www.w3.org/TR/cors>.
 
-Homepage: https://github.com/alephcloud/wai-cors
-Bug-reports: https://github.com/alephcloud/wai-cors/issues
+Homepage: https://github.com/larskuhtz/wai-cors
+Bug-reports: https://github.com/larskuhtz/wai-cors/issues
 License: MIT
 License-file: LICENSE
-Author: Lars Kuhtz <lars@alephcloud.com>
-Maintainer: Lars Kuhtz <lars@alephcloud.com>
-Copyright: Copyright (c) 2014 AlephCloud Systems, Inc.
+Author: Lars Kuhtz <lakuhtz@gmail.com>
+Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
+Copyright: Copyright (c) 2015 Lars Kuhtz <lakuhtz@gmail.com>, 2014 AlephCloud Systems, Inc.
 Category: Web
 Build-type: Simple
 Cabal-version: >= 1.14.0
@@ -32,11 +33,11 @@ data-files:
 
 source-repository head
     type: git
-    location: https://github.com/alephcloud/wai-cors
+    location: https://github.com/larskuhtz/wai-cors
 
 source-repository this
     type: git
-    location: https://github.com/alephcloud/wai-cors
+    location: https://github.com/larskuhtz/wai-cors
     tag: 0.2.2
 
 flag transformers-3
