@@ -4,7 +4,7 @@
 -- ------------------------------------------------------ --
 
 Name: wai-cors
-Version: 0.2.2
+Version: 0.2.3
 Synopsis: CORS for WAI
 
 Description:
@@ -35,11 +35,12 @@ data-files:
 source-repository head
     type: git
     location: https://github.com/larskuhtz/wai-cors
+    branch: master
 
 source-repository this
     type: git
     location: https://github.com/larskuhtz/wai-cors
-    tag: 0.2.2
+    tag: 0.2.3
 
 flag transformers-3
     description: use transformers<0.3 (this is set automatically)
