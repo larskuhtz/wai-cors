@@ -14,7 +14,20 @@
 -- | An implemenation of Cross-Origin resource sharing (CORS) for WAI that
 -- aims to be compliant with <http://www.w3.org/TR/cors>.
 --
--- The function 'simpleCors' enables support of simple cross-origin requests.
+-- The function 'simpleCors' enables support of simple cross-origin requests. More
+-- advanced CORS policies can be enabled by passing a 'CorsResourcePolicy' to the
+-- 'cors' middleware.
+--
+-- = Note On Security
+--
+-- This implementation doens't include any server side enforcement. By
+-- complying with the CORS standard it enables the client (i.e. the web
+-- browser) to enforce the CORS policy. For application authors it is strongly
+-- recommended to take into account the security considerations in section 6.3
+-- of <http://wwww.w3.org/TR/cors>. In particular the application should check
+-- that the value of the @Origin@ header matches it's expectations.
+--
+-- = Example
 --
 -- The following is an example how to enable support for simple cross-origin requests
 -- for a <http://hackage.haskell.org/package/scotty scotty> application.
