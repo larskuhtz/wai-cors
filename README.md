@@ -8,14 +8,40 @@ This package provides a Haskell implemenation of CORS for
 that aims to be compliant with
 [http://www.w3.org/TR/cors](http://www.w3.org/TR/cors).
 
+Note On Security
+----------------
+
+This implementation doens't include any server side enforcement. By complying
+with the CORS standard it enables the client (i.e. the web browser) to enforce
+the CORS policy. For application authors it is strongly recommended to take
+into account the security considerations in section 6.3 of the
+[CORS standard](http://wwww.w3.org/TR/cors). In particular the application should
+check that the value of the `Origin` header matches it's expectations.
+
+Installation
+------------
+
+Assuming the availability of recent versions of
+[GHC](https://www.haskell.org/ghc/) and [cabal](https://www.haskell.org/cabal/)
+this package is installed via
+
+```.bash
+cabal update
+cabal install wai-cors
+```
+
 Usage
 -----
+
+The function 'simpleCors' enables support of simple cross-origin requests. More
+advanced CORS policies can be enabled by passing a 'CorsResourcePolicy' to the
+'cors' middleware.
 
 The file `test/server.hs` shows how to support simple cross-origin requests (as
 defined in [http://www.w3.org/TR/cors](http://www.w3.org/TR/cors)) in a
 [scotty](http://hackage.haskell.org/package/scotty) application.
 
-~~~{.haskell}
+```.haskell
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -30,14 +56,14 @@ main ∷ IO ()
 main = scotty 8080 $ do
     middleware simpleCors
     matchAny  "/" $ text "Success"
-~~~
+```
 
-The result of following curl command will include the HTTP response 
+The result of following curl command will include the HTTP response
 header `Access-Control-Allow-Origin: *`.
 
-~~~{.bash}
+```.bash
 curl -i http://127.0.0.1:8888 -H 'Origin: 127.0.0.1' -v
-~~~
+```
 
 Documentation for more general usage can be found in the module
 [Network.Wai.Middleware.Cors](http://hackage.haskell.org/package/wai-cors/docs/Network-Wai-Middleware-Cors.html).
@@ -50,10 +76,10 @@ request from a browser.
 
 Start server:
 
-~~~{.bash}
+```.bash
 cd test
 runHaskell server.hs
-~~~
+```
 
 Open the file `test/index.html` in a modern web-browser in order to run some
 simple tests.
