@@ -3,7 +3,7 @@
 Cross-Origin Resource Sharing (CORS) For Wai
 ============================================
 
-This package provides a Haskell implemenation of CORS for
+This package provides a Haskell implementation of CORS for
 [WAI](http://hackage.haskell.org/package/wai)
 that aims to be compliant with
 [http://www.w3.org/TR/cors](http://www.w3.org/TR/cors).
@@ -11,12 +11,12 @@ that aims to be compliant with
 Note On Security
 ----------------
 
-This implementation doens't include any server side enforcement. By complying
+This implementation doesn't include any server side enforcement. By complying
 with the CORS standard it enables the client (i.e. the web browser) to enforce
 the CORS policy. For application authors it is strongly recommended to take
 into account the security considerations in section 6.3 of the
 [CORS standard](http://wwww.w3.org/TR/cors). In particular the application should
-check that the value of the `Origin` header matches it's expectations.
+check that the value of the `Origin` header matches the expectations.
 
 Websocket connections don't support CORS and are ignored by the CORS implementation
 in this package. However Websocket requests usually (at least for some
