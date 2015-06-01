@@ -58,6 +58,10 @@ module Network.Wai.Middleware.Cors
 #define MIN_VESION_base(x,y,z) 1
 #endif
 
+#ifndef MIN_VESION_wai
+#define MIN_VESION_wai(x,y,z) 1
+#endif
+
 #if ! MIN_VERSION_base(4,8,0)
 import Control.Applicative
 #endif
