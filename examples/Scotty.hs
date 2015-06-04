@@ -1,10 +1,14 @@
--- ------------------------------------------------------ --
--- Copyright © 2014 AlephCloud Systems, Inc.
--- ------------------------------------------------------ --
-
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+-- |
+-- Module: Main
+-- Description: Exampe for using wai-cors with scotty
+-- Copyright: © 2015 Lars Kuhtz <lakuhtz@gmail.com>
+-- License: MIT
+-- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
+-- Stability: experimental
+--
 module Main
 ( main
 ) where

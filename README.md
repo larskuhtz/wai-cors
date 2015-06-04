@@ -43,7 +43,7 @@ The function 'simpleCors' enables support of simple cross-origin requests. More
 advanced CORS policies can be enabled by passing a 'CorsResourcePolicy' to the
 'cors' middleware.
 
-The file `test/server.hs` shows how to support simple cross-origin requests (as
+The file `examples/Scotty.hs` shows how to support simple cross-origin requests (as
 defined in [http://www.w3.org/TR/cors](http://www.w3.org/TR/cors)) in a
 [scotty](http://hackage.haskell.org/package/scotty) application.
 
@@ -74,18 +74,28 @@ curl -i http://127.0.0.1:8888 -H 'Origin: 127.0.0.1' -v
 Documentation for more general usage can be found in the module
 [Network.Wai.Middleware.Cors](http://hackage.haskell.org/package/wai-cors/docs/Network-Wai-Middleware-Cors.html).
 
-TEST
+Test
 ----
 
-Currently there is only basic support to test simple cross-origin
-request from a browser.
+In order to run the automated test suite [PhantomJS](http://phantomjs.org/) (at
+least version 2.0) must be installed in the system.
 
-Start server:
+```.bash
+cabal install --only-dependencies --enable-tests
+cabal test --show-details=streaming
+```
+
+If [PhantomJS](http://phantomjs.org/) is not available the tests can be
+exectued manually in a modern web-browser as follows.
+
+Start the server application:
 
 ```.bash
 cd test
-runHaskell server.hs
+ghc -main-is Server Server.hs
+./Server
 ```
 
-Open the file `test/index.html` in a modern web-browser in order to run some
-simple tests.
+Open the file `test/index.html` in a modern web-browser. On page load a Javascript
+script is exectued that runs the test suite and prints the result on the page.
+

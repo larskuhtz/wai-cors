@@ -38,6 +38,13 @@ before_install:
  - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
 
+ # install phantomjs 2
+ - wget https://s3.amazonaws.com/travis-phantomjs/phantomjs-2.0.0-ubuntu-12.04.tar.bz2
+ - tar -xjf phantomjs-2.0.0-ubuntu-12.04.tar.bz2
+ - sudo rm -rf /usr/local/phantomjs/bin/phantomjs
+ - sudo mv phantomjs /usr/local/phantomjs/bin/phantomjs
+ - phantomjs --version
+
 install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
@@ -56,7 +63,7 @@ script:
  # (including tests/benchmarks)
  - cabal build
 
- - cabal test
+ - cabal test --show-details=always
  - cabal check
 
  # tests that a source-distribution can be generated

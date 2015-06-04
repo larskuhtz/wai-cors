@@ -1,64 +1,283 @@
 <!DOCTYPE html>
+<!-- Copyright (c) 2015 Lars Kuhtz <lakuhtz@gmail.coml> -->
 <html>
     <head> 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript">
 
     var url = 'http://localhost:8080'
-    var simpleTest = function (label, result, method, creds, contentType, headers) {
+    var wsurl = 'ws://localhost:8080'
 
-        var xhr = new XMLHttpRequest();
-        xhr.open(method, url, true);
+/* ************************************************************************** */
+/* Utils */
 
-        var succ = function() {
-            $('#results').append('<p style="color:green">' + label + ': success</p>')
+    /* asynchronous array map function
+     *
+     * The function f is called on each element in the value and
+     * is expected to return a promise object.
+     *
+     * asyncMap itself returns a promise object that is completed
+     * when the promises for all elements completed. When all element
+     * promises resolve the array promises is resolved. If at least
+     * one element promise is reject the array promises is rejected.
+     *
+     * The done and fail callbacks are called with an object of the form
+     *
+     * { 'successes':successes, 'failures': failures, 'results': results }
+     *
+     * The results that array has one value for each element of the original
+     * array. The values in the result array are objects of the form
+     *
+     * { success: trueOrFalse, result: elementPromiseResult }
+     *
+     * The progress callback is given an object of the form
+     *
+     * { successes: sumS, failures: numF, missing: numberOfMissingElementPromises }
+     */
+    var asyncMap = function (a,f) {
+        var def = $.Deferred();
+        var successes = 0;
+        var failures = 0;
+        var results = new Array(a.length);
+        var c = a.length;
+
+        a.map(function (val, idx, arr) {
+            t = f(val);
+            t.done(function(arg) {
+                successes++;
+                results[idx] = { 'success':true, 'result':arg };
+            });
+            t.fail(function(arg) {
+                failures++;
+                results[idx] = { 'success':false, 'result':arg };
+            });
+            t.always(function() {
+                c--;
+                if (c > 0) {
+                    def.notify({ 'successes':successes, 'failures': failures, 'missing': c });
+                } else {
+                    var result = { 'successes':successes, 'failures': failures, 'results': results };
+                    if (failures === 0) {
+                        def.resolve(result);
+                    } else {
+                        def.reject(result);
+                    };
+                };
+            });
+        });
+        return def.promise();
+    };
+
+    // monoid concatenation for asyncMap results
+    var concatResults = function (r1, r2) {
+        return {
+            'successes': r1.successes + r2.successes,
+            'failures': r1.failures + r2.failures,
+            'results': r1.results.concat(r2.results)
         };
-
-        var fail = function() {
-            $('#results').append('<p style="color:red">' + label + ': failure</p>')
-        };
-
-        xhr.onerror = result ? fail : succ;
-        xhr.onload = result ? succ : fail;
-
-        xhr.setRequestHeader('content-type', contentType);
-
-        for (var i = 0; i < headers.length; ++i) {
-            var e = headers[i];
-            xhr.setRequestHeader(e[1], e[2]);
-        }
-        xhr.send();
     }
 
+    // monoid identity for asyncMap results
+    var emptyResult = { 'successes': 0, 'failures': 0, 'results':[] };
+
+    // monad join for asyncMap results
+    var flattenResults = function (r) {
+        return r.results.reduce(function (p,c,i,a) { return concatResults(p,c.result); }, emptyResult);
+    };
+
+/* ************************************************************************** */
+/* PhantomJS Integration */
+
+    // Integration with PhantomJS
+    //
+    // call with: phantomjs --ignore-ssl-errors=true phantomjs.js $PWD/index.html
+    //
+    if (typeof window.callPhantom === 'function') {
+        window.setTimeout(function () { window.callPhantom("timeout"); },3000);
+    };
+
+    var phantomJsCb = function (result) { 
+        if (typeof window.callPhantom === 'function') {
+            window.callPhantom(result);
+        };
+    };
+
+/* ************************************************************************** */
+/* Run Tests */
+
+    var runTest = function (params) {
+
+        var test = $.Deferred();
+        var req = $.ajax(
+            { 'method': params.method
+            , 'url': url
+            , 'contentType': params.contentType
+            , 'crossDomain': true
+            , 'headers': params.headers
+            });
+
+        var succ = function () { test.resolve(params); }
+        var fail = function () { test.reject(params); }
+        req.done(params.expectedResult ? succ : fail);
+        req.fail(params.expectedResult ? fail : succ);
+
+        return test.promise();
+    }
+
+    var pageTest = function (params) {
+        test = runTest(params);
+
+        test.done(function() {
+            $('#results').append('<p style="color:green">' + params.label + ': success</p>');
+        });
+
+        test.fail(function() {
+            $('#results').append('<p style="color:red">' + params.label + ': failure</p>');
+        });
+        return test;
+    }
+
+    var runAllPageTests = function (tests) {
+        return asyncMap(tests, pageTest);
+    }
+
+/* ************************************************************************** */
+/* WebSockets */
+
+    /* a super simple ws service client
+     *
+     * TODO add proper callbacks (e.g. close, error);
+     * TODO in case we use this for anything more complex we should add proper
+     *      streaming by supporting chunking.
+     *
+     */
+    var WsService = function (url, timeout) {
+        var timeout = timeout ? timeout : 1000;
+        var curMsgId = 0;
+        var ready = $.Deferred();
+        var websocket = new WebSocket(url);
+        var newMsgId = function () { return ++curMsgId; };
+
+        // maps message ids data to promise objects
+        var msgMap = {}
+
+        var ws = function (msg) {
+            var p = $.Deferred();
+            var req = { id: newMsgId(), msg: msg};
+            ready.then(function () { websocket.send(JSON.stringify(req)); });
+            msgMap[req.id] = p;
+            setTimeout(function () { p.reject("timeout: no response from websocket after " + timeout + " milliseconds"); }, timeout);
+            return p.promise();
+        };
+
+        websocket.onmessage = function (evt) {
+            var resp = JSON.parse(evt.data);
+            var prom = msgMap[resp.id];
+            if (prom) {
+                prom.resolve(resp.msg);
+            } else {
+                console.log("unexpected message from websocket: " + JSON.stringify(resp));
+            };
+        };
+
+        var wserror = function (evt) {
+            for (i in msgMap) {
+                if (msgMap.hasOwnProperty(i)) {
+                    msgMap[i].fail();
+                };
+            };
+            msgMap = {};
+        };
+
+        websocket.onopen = function(evt) {
+            ready.resolve();
+        };
+
+        websocket.onerror = function(evt) {
+            console.log("websocket error: " + evt.data);
+            wserror(evt);
+        };
+
+        websocket.onclose = function(evt) {
+            console.log("websocket closed unexpectedly: " + evt.data);
+            wserror(evt);
+        };
+
+        return ws;
+    };
+
+    var websocketTest = function () {
+
+        var ws = WsService(wsurl);
+
+        var wstest = function (msg) {
+            var p = ws(msg);
+
+            p.done(function() {
+                $('#wsresults').append('<p style="color:green">' + msg + ': success</p>');
+            });
+
+            p.fail(function() {
+                $('#wsresults').append('<p style="color:red">' + msg + ': failure</p>');
+            });
+            return p;
+        }
+
+        return asyncMap(["msg 0", "msg 1", "msg 2"], wstest);
+    };
+
+/* ************************************************************************** */
+/* Test Vectors */
+
+    var mkTest = function (label, expectedResult, method, credentials, contentType, headers) {
+        return {
+            label: label,
+            expectedResult: expectedResult,
+            method: method,
+            credentials: credentials,
+            contentType: contentType,
+            headers: headers
+        };
+    }
+
+    var tests = [
+        mkTest("simple GET 1", true, "GET", false, 'text/plain', []),
+        mkTest("simple GET 2", true, "GET", false, 'application/x-www-form-urlencoded', []),
+        mkTest("simple GET 3", true, "GET", false, 'multipart/form-data', []),
+        mkTest("simple GET 4", false, "GET", false, 'application/json', []),
+        mkTest("simple GET 5", false, "GET", false, 'text/plain', {'abc': 'abc'}),
+
+        mkTest("simple HEAD 1", true, "HEAD", false, 'text/plain', []),
+        mkTest("simple HEAD 2", true, "HEAD", false, 'application/x-www-form-urlencoded', []),
+        mkTest("simple HEAD 3", true, "HEAD", false, 'multipart/form-data', []),
+        mkTest("simple HEAD 4", false, "HEAD", false, 'application/json', []),
+        mkTest("simple HEAD 5", false, "HEAD", false, 'text/plain', {'abc': 'abc'}),
+
+        mkTest("simple POST 1", true, "POST", false, 'text/plain', []),
+        mkTest("simple POST 2", true, "POST", false, 'application/x-www-form-urlencoded', []),
+        mkTest("simple POST 3", true, "POST", false, 'multipart/form-data', []),
+        mkTest("simple POST 4", false, "POST", false, 'application/json', []),
+        mkTest("simple POST 5", false, "POST", false, 'test/plain', {'abc':'abc'}),
+
+        mkTest("simple PUT 1", false, "PUT", false, 'text/plain', []),
+        mkTest("simple DELETE 1", false, "DELETE", false, 'text/plain', []),
+        mkTest("simple PATCH 1", false, "PATCH", false, 'text/plain', []),
+    ];
+
     $(document).ready(function() {
-        simpleTest("simple GET 1", true, "GET", false, 'text/plain', []);
-        simpleTest("simple GET 2", true, "GET", false, 'application/x-www-form-urlencoded', []);
-        simpleTest("simple GET 3", true, "GET", false, 'multipart/form-data', []);
-        simpleTest("simple GET 4", false, "GET", false, 'application/json', []);
-        simpleTest("simple GET 5", false, "GET", false, 'text/plain', [['abc','abc']]);
-
-        simpleTest("simple HEAD 1", true, "HEAD", false, 'text/plain', []);
-        simpleTest("simple HEAD 2", true, "HEAD", false, 'application/x-www-form-urlencoded', []);
-        simpleTest("simple HEAD 3", true, "HEAD", false, 'multipart/form-data', []);
-        simpleTest("simple HEAD 4", false, "HEAD", false, 'application/json', []);
-        simpleTest("simple HEAD 5", false, "HEAD", false, 'text/plain', [['abc','abc']]);
-
-        simpleTest("simple POST 1", true, "POST", false, 'text/plain', []);
-        simpleTest("simple POST 2", true, "POST", false, 'application/x-www-form-urlencoded', []);
-        simpleTest("simple POST 3", true, "POST", false, 'multipart/form-data', []);
-        simpleTest("simple POST 4", false, "POST", false, 'application/json', []);
-        simpleTest("simple POST 5", false, "POST", false, 'test/plain', [['abc','abc']]);
-
-        simpleTest("simple PUT 1", false, "PUT", false, 'text/plain', []);
-        simpleTest("simple DELETE 1", false, "DELETE", false, 'text/plain', []);
-        simpleTest("simple PATCH 1", false, "PATCH", false, 'text/plain', []);
+        var p = runAllPageTests(tests);
+        var q = websocketTest();
+        var r = asyncMap([p,q], function (x) { return x; });
+        r.always(function (x) { phantomJsCb(flattenResults(x)); });
     });
 
     </script>
     </head>
     <body>
         <h1>Results</h1>
-        <div id="results"/>
+        <div id="results"></div>
+        <h1>Websocket Test Results</h1>
+        <div id="wsresults"></div>
     </body>
 </html>
 

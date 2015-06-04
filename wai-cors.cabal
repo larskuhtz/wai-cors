@@ -19,7 +19,7 @@ License: MIT
 License-file: LICENSE
 Author: Lars Kuhtz <lakuhtz@gmail.com>
 Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
-Copyright: Copyright (c) 2015 Lars Kuhtz <lakuhtz@gmail.com>, 2014 AlephCloud Systems, Inc.
+Copyright: (c) 2015 Lars Kuhtz <lakuhtz@gmail.com>, (c) 2014 AlephCloud Systems, Inc.
 Category: Web
 Build-type: Simple
 Cabal-version: >= 1.14.0
@@ -29,7 +29,8 @@ data-files:
     CHANGELOG.md
     constraints
     test/index.html
-    test/server.hs
+    test/phantomjs.js
+    examples/Scotty.hs
 
 source-repository head
     type: git
@@ -47,6 +48,11 @@ flag transformers-3
 
 flag wai-1
     description: use version wai<2 (this is set automatically)
+    default: False
+    manual: False
+
+flag wai-2
+    description: use version wai<3 (this is set automatically)
     default: False
     manual: False
 
@@ -70,10 +76,14 @@ Library
     if flag (wai-1)
         build-depends:
             wai < 2.0,
-            resourcet >= 0.4
-    else
+            resourcet >= 0.4,
+            transformers < 0.4
+    if flag (wai-2)
         build-depends:
-            wai >= 2.0
+            wai < 3.0 && >= 2.0
+    if ! flag (wai-1) && ! flag (wai-2)
+        build-depends:
+            wai >= 3.0
 
     if flag(transformers-3)
         build-depends:
@@ -83,5 +93,41 @@ Library
     else
         build-depends:
             mtl >= 2.2,
-            transformers >= 0.4
+            transformers >= 0.4,
+            wai >= 2
+
+    ghc-options: -Wall
+
+test-suite phantomjs
+    type: exitcode-stdio-1.0
+    default-language: Haskell2010
+    main-is: PhantomJS.hs
+    hs-source-dirs: test
+
+    other-modules:
+        Server
+
+    build-depends:
+        base == 4.*,
+        base-unicode-symbols >= 0.2,
+        directory >= 1.2,
+        filepath >= 1.4,
+        http-types >= 0.8,
+        network >= 2.6,
+        process >= 1.2,
+        text >= 1.2,
+        wai-cors
+
+    -- we only build the tests suite with the most recent wai version
+    -- cabal fails to resolves the old dependencies otherwise.
+    if flag (wai-1) || flag (wai-2)
+        buildable: False
+    else
+        build-depends:
+            wai-websockets >= 3.0,
+            warp >= 3.0,
+            wai >= 3.0,
+            websockets >= 0.9
+
+    ghc-options: -threaded -Wall -with-rtsopts=-N
 
