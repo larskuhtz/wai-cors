@@ -22,7 +22,7 @@ Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 Copyright:
     (c) 2015 Lars Kuhtz <lakuhtz@gmail.com>,
     (c) 2014 AlephCloud Systems, Inc.
-Category: Web
+Category: HTTP, Network, Web, Yesod
 Build-type: Simple
 Cabal-version: >= 1.14.0
 
