@@ -1,8 +1,3 @@
--- ------------------------------------------------------ --
--- Copyright © 2015 Lars Kuhtz <lakuhtz@gmail.com>
--- Copyright © 2014 AlephCloud Systems, Inc.
--- ------------------------------------------------------ --
-
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -12,7 +7,17 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE CPP #-}
 
--- | An implemenation of Cross-Origin resource sharing (CORS) for WAI that
+-- |
+-- Module: Network.Wai.Middleware.Cors
+-- Description: Cross-Origin resource sharing (CORS) for WAI
+-- Copyright:
+--     © 2015 Lars Kuhtz <lkuhtz@gmail.com,
+--     © 2014 AlephCloud Systems, Inc.
+-- License: MIT
+-- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
+-- Stability: stable
+--
+-- An implemenation of Cross-Origin resource sharing (CORS) for WAI that
 -- aims to be compliant with <http://www.w3.org/TR/cors>.
 --
 -- The function 'simpleCors' enables support of simple cross-origin requests. More
