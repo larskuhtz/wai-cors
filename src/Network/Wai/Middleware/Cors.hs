@@ -122,8 +122,9 @@ type ReqMonad = IO
 type ReqMonad = ResourceT IO
 #endif
 
--- | Origins are expected to be formated as described in RFC 6454 (section
--- 6.2). In particular the string @*@ is not a valid origin (but the string
+-- | Origins are expected to be formated as described in
+-- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2).
+-- In particular the string @*@ is not a valid origin (but the string
 -- @null@ is).
 --
 type Origin = B8.ByteString
@@ -141,7 +142,8 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- origins each with a Boolean flag that indicates if credentials are used
     -- to access the resource via CORS.
     --
-    -- Origins must be formated as described in RFC6454 (section 6.2). In
+    -- Origins must be formated as described in
+    -- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2). In
     -- particular the string @*@ is not a valid origin (but the string @null@
     -- is).
     --
@@ -167,7 +169,11 @@ data CorsResourcePolicy = CorsResourcePolicy
 
     -- | If the resource is shared by multiple origins but
     -- @Access-Control-Allow-Origin@ is not set to @*@ this may be set to
-    -- 'True'.
+    -- 'True' to cause the server to include a @Vary: Origin@ header in the
+    -- response, thus indicating that the value of the
+    -- @Access-Control-Allow-Origin@ header may vary between different requests
+    -- for the same resource. This prevents caching of the responses which may
+    -- not apply accross different origins.
     --
     , corsVaryOrigin ∷ !Bool
 
