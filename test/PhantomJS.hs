@@ -35,7 +35,7 @@ phantomJsBinaryPath = "phantomjs"
 
 phantomJsArgs ∷ IsString a ⇒ [a]
 phantomJsArgs = ["--ignore-ssl-errors=true"]
---phantomJsArgs = ["--ignore-ssl-errors=true", "--debug=true"]
+-- phantomJsArgs = ["--ignore-ssl-errors=true", "--debug=true"]
 
 phantomJsScriptPath ∷ FilePath
 phantomJsScriptPath = "test/phantomjs.js"
