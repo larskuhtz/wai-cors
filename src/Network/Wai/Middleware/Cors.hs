@@ -105,6 +105,9 @@ import qualified Data.CaseInsensitive as CI
 import qualified Data.CharSet as CS
 import Data.List (intersect, (\\), union)
 import Data.Maybe (catMaybes)
+#if ! MIN_VERSION_base(4,8,0)
+import Data.Monoid (mempty)
+#endif
 import Data.Monoid.Unicode
 import Data.String
 
@@ -116,14 +119,17 @@ import Prelude.Unicode
 import qualified Text.Parser.Char as P
 import qualified Text.Parser.Combinators as P
 
+{-
 #if MIN_VERSION_wai(2,0,0)
 type ReqMonad = IO
 #else
 type ReqMonad = ResourceT IO
 #endif
+-}
 
--- | Origins are expected to be formated as described in RFC 6454 (section
--- 6.2). In particular the string @*@ is not a valid origin (but the string
+-- | Origins are expected to be formated as described in
+-- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2).
+-- In particular the string @*@ is not a valid origin (but the string
 -- @null@ is).
 --
 type Origin = B8.ByteString
@@ -141,7 +147,8 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- origins each with a Boolean flag that indicates if credentials are used
     -- to access the resource via CORS.
     --
-    -- Origins must be formated as described in RFC6454 (section 6.2). In
+    -- Origins must be formated as described in
+    -- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2). In
     -- particular the string @*@ is not a valid origin (but the string @null@
     -- is).
     --
@@ -167,7 +174,11 @@ data CorsResourcePolicy = CorsResourcePolicy
 
     -- | If the resource is shared by multiple origins but
     -- @Access-Control-Allow-Origin@ is not set to @*@ this may be set to
-    -- 'True'.
+    -- 'True' to cause the server to include a @Vary: Origin@ header in the
+    -- response, thus indicating that the value of the
+    -- @Access-Control-Allow-Origin@ header may vary between different requests
+    -- for the same resource. This prevents caching of the responses which may
+    -- not apply accross different origins.
     --
     , corsVaryOrigin ∷ !Bool
 
@@ -342,13 +353,13 @@ cors policyPattern app r
             else res $ corsFailure (B8.pack e)
 
         -- Match request origin with corsOrigins from policy
-        let respOrigin = case corsOrigins policy of
+        let respOriginOrErr = case corsOrigins policy of
                 Nothing → return Nothing
                 Just (originList, withCreds) → if origin `elem` originList
                     then Right $ Just (origin, withCreds)
                     else Left $ "Unsupported origin: " ⊕ B8.unpack origin
 
-        case respOrigin of
+        case respOriginOrErr of
             Left e → err e
             Right respOrigin → do
 
@@ -418,10 +429,13 @@ cors policyPattern app r
     -- HTTP response headers that are common to normal and preflight CORS responses
     --
     commonCorsHeaders ∷ Maybe (Origin, Bool) → Bool → HTTP.ResponseHeaders
-    commonCorsHeaders Nothing True = [("Access-Control-Allow-Origin", "*"), ("Vary", "Origin")]
-    commonCorsHeaders Nothing False = [("Access-Control-Allow-Origin", "*")]
-    commonCorsHeaders (Just (o, False)) _ = [("Access-Control-Allow-Origin", o)]
-    commonCorsHeaders (Just (o, True)) _  = [("Access-Control-Allow-Origin", o), ("Access-Control-Allow-Credentials", "true")]
+    commonCorsHeaders Nothing _ = [("Access-Control-Allow-Origin", "*")]
+    commonCorsHeaders (Just (o, creds)) vary = []
+        ⊕ (True ?? ("Access-Control-Allow-Origin", o))
+        ⊕ (creds ?? ("Access-Control-Allow-Credentials", "true"))
+        ⊕ (vary ?? ("Vary", "Origin"))
+      where
+        (??) a b = if a then pure b else mempty
 
     -- HTTP response headers that are only used with normal CORS responses
     --

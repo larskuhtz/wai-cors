@@ -37,3 +37,8 @@ page.onCallback = function(data) {
         phantom.exit(0);
     }
 }
+
+page.onConsoleMessage = function(msg) {
+    system.stderr.writeLine('[CONSOLE] ' + msg);
+};
+

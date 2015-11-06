@@ -134,3 +134,31 @@ test-suite phantomjs
 
     ghc-options: -threaded -Wall -with-rtsopts=-N
 
+test-suite unit-tests
+    type: exitcode-stdio-1.0
+    default-language: Haskell2010
+    main-is: UnitTests.hs
+    hs-source-dirs: test
+
+    build-depends:
+        base == 4.*,
+        base-unicode-symbols >= 0.2,
+        http-types >= 0.8,
+        tasty >= 0.10,
+        tasty-hunit >= 0.9,
+        wai-cors
+
+    -- we only build the tests suite with the most recent wai version
+    -- cabal fails to resolves the old dependencies otherwise.
+    if flag (wai-1) || flag (wai-2)
+        buildable: False
+    else
+        build-depends:
+            wai-extra >= 3.0,
+            wai-websockets >= 3.0,
+            warp >= 3.0,
+            wai >= 3.0,
+            websockets >= 0.9
+
+    ghc-options: -threaded -Wall -with-rtsopts=-N
+

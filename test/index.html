@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Copyright (c) 2015 Lars Kuhtz <lakuhtz@gmail.coml> -->
 <html>
-    <head> 
+    <head>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript">
 
@@ -96,7 +96,7 @@
         window.setTimeout(function () { window.callPhantom("timeout"); },3000);
     };
 
-    var phantomJsCb = function (result) { 
+    var phantomJsCb = function (result) {
         if (typeof window.callPhantom === 'function') {
             window.callPhantom(result);
         };
@@ -110,15 +110,28 @@
         var test = $.Deferred();
         var req = $.ajax(
             { 'method': params.method
-            , 'url': url
+            , 'url': url + "/cors/" + params.path + "/" + encodeURIComponent(params.label)
             , 'contentType': params.contentType
-            , 'crossDomain': true
+            , 'crossDomain': params.cors
             , 'headers': params.headers
             });
 
         var succ = function () { test.resolve(params); }
         var fail = function () { test.reject(params); }
-        req.done(params.expectedResult ? succ : fail);
+        var check = function () {
+            /* check if the response matches our expectations */
+            for (var i in params.expectedHeaders) {
+                if (params.expectedHeaders.hasOwnProperty(i)) {
+                    var hdr = req.getResponseHeader(i);
+                    // console.log(req.getAllResponseHeaders());
+                    if ( ! hdr || hdr != params.expectedHeaders.i) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        req.done(check() === params.expectedResult ? succ : fail);
         req.fail(params.expectedResult ? fail : succ);
 
         return test.promise();
@@ -155,7 +168,7 @@
         var timeout = timeout ? timeout : 1000;
         var curMsgId = 0;
         var ready = $.Deferred();
-        var websocket = new WebSocket(url);
+        var websocket = new WebSocket(url + "/cors");
         var newMsgId = function () { return ++curMsgId; };
 
         // maps message ids data to promise objects
@@ -229,43 +242,80 @@
 /* ************************************************************************** */
 /* Test Vectors */
 
-    var mkTest = function (label, expectedResult, method, credentials, contentType, headers) {
+    var mkTest = function (label, expectedResult, method, path, credentials, contentType, headers, cors) {
         return {
             label: label,
             expectedResult: expectedResult,
             method: method,
+            path: path,
             credentials: credentials,
             contentType: contentType,
-            headers: headers
+            headers: headers,
         };
     }
 
-    var tests = [
-        mkTest("simple GET 1", true, "GET", false, 'text/plain', []),
-        mkTest("simple GET 2", true, "GET", false, 'application/x-www-form-urlencoded', []),
-        mkTest("simple GET 3", true, "GET", false, 'multipart/form-data', []),
-        mkTest("simple GET 4", false, "GET", false, 'application/json', []),
-        mkTest("simple GET 5", false, "GET", false, 'text/plain', {'abc': 'abc'}),
+    var simpleTests = [
+        mkTest("simple GET 1", true, "GET", "simple", false, 'text/plain', []),
+        mkTest("simple GET 2", true, "GET", "simple", false, 'application/x-www-form-urlencoded', []),
+        mkTest("simple GET 3", true, "GET", "simple", false, 'multipart/form-data', []),
+        mkTest("simple GET 4", false, "GET", "simple", false, 'application/json', []),
+        mkTest("simple GET 5", false, "GET", "simple", false, 'text/plain', {'abc': 'abc'}),
 
-        mkTest("simple HEAD 1", true, "HEAD", false, 'text/plain', []),
-        mkTest("simple HEAD 2", true, "HEAD", false, 'application/x-www-form-urlencoded', []),
-        mkTest("simple HEAD 3", true, "HEAD", false, 'multipart/form-data', []),
-        mkTest("simple HEAD 4", false, "HEAD", false, 'application/json', []),
-        mkTest("simple HEAD 5", false, "HEAD", false, 'text/plain', {'abc': 'abc'}),
+        mkTest("simple HEAD 1", true, "HEAD", "simple", false, 'text/plain', []),
+        mkTest("simple HEAD 2", true, "HEAD", "simple", false, 'application/x-www-form-urlencoded', []),
+        mkTest("simple HEAD 3", true, "HEAD", "simple", false, 'multipart/form-data', []),
+        mkTest("simple HEAD 4", false, "HEAD", "simple", false, 'application/json', []),
+        mkTest("simple HEAD 5", false, "HEAD", "simple", false, 'text/plain', {'abc': 'abc'}),
 
-        mkTest("simple POST 1", true, "POST", false, 'text/plain', []),
-        mkTest("simple POST 2", true, "POST", false, 'application/x-www-form-urlencoded', []),
-        mkTest("simple POST 3", true, "POST", false, 'multipart/form-data', []),
-        mkTest("simple POST 4", false, "POST", false, 'application/json', []),
-        mkTest("simple POST 5", false, "POST", false, 'test/plain', {'abc':'abc'}),
+        mkTest("simple POST 1", true, "POST", "simple", false, 'text/plain', []),
+        mkTest("simple POST 2", true, "POST", "simple", false, 'application/x-www-form-urlencoded', []),
+        mkTest("simple POST 3", true, "POST", "simple", false, 'multipart/form-data', []),
+        mkTest("simple POST 4", false, "POST", "simple", false, 'application/json', []),
+        mkTest("simple POST 5", false, "POST", "simple", false, 'test/plain', {'abc':'abc'}),
 
-        mkTest("simple PUT 1", false, "PUT", false, 'text/plain', []),
-        mkTest("simple DELETE 1", false, "DELETE", false, 'text/plain', []),
-        mkTest("simple PATCH 1", false, "PATCH", false, 'text/plain', []),
+        mkTest("simple PUT 1", false, "PUT", "simple", false, 'text/plain', []),
+        mkTest("simple DELETE 1", false, "DELETE", "simple", false, 'text/plain', []),
+        mkTest("simple PATCH 1", false, "PATCH", "simple", false, 'text/plain', []),
+    ];
+
+    var nonSimplePolicyTests = [
+        /* are the simple requests (GET and POST) expected to succeed? */
+        mkTest("nonSimplePolicy GET", true, "GET", "non-simple", false, 'text/plain', []),
+        mkTest("nonSimplePolicy POST", true, "POST", "non-simple", false, 'text/plain', []),
+        mkTest("nonSimplePolicy PUT", true, "PUT", "non-simple", false, 'text/plain', []),
+        mkTest("nonSimplePolicy DELETE", false, "DELETE", "non-simple", false, 'text/plain', []),
+
+        /* check presence of 'Vary: Origin' header */
+        /* Currenly disabled. It seems that phantomjs doesn't support it
+        {
+            label: "nonSimplePolicy vary origin",
+            expectedResult: true,
+            method: "PUT",
+            path: "non-simple",
+            credentials: false,
+            contentType: 'text/plain',
+            headers: {},
+            cors: true,
+            expectedHeaders: { 'Vary' : 'Origin' }
+        },
+        */
+
+        /* check that X-cors-test is accepted header */
+        {
+            label: "nonSimplePolicy request headers",
+            expectedResult: true,
+            method: "PUT",
+            path: "non-simple",
+            credentials: false,
+            contentType: 'text/plain',
+            headers: { 'X-cors-test' : 'cors-test' },
+            cors: true,
+            expectedHeaders : {}
+        }
     ];
 
     $(document).ready(function() {
-        var p = runAllPageTests(tests);
+        var p = runAllPageTests(simpleTests.concat(nonSimplePolicyTests));
         var q = websocketTest();
         var r = asyncMap([p,q], function (x) { return x; });
         r.always(function (x) { phantomJsCb(flattenResults(x)); });
