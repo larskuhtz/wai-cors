@@ -1,75 +1,57 @@
-# NB: don't set `language: haskell` here
 language: c
 
-# See also https://github.com/hvr/multi-ghc-travis for more information
+# explicitly request container-based infrastructure
+sudo: false
 
-# The following lines enable several GHC versions and/or HP versions
-# to be tested; often it's enough to test only against the last
-# release of a major GHC version. Setting HPVER implictly sets
-# GHCVER. Omit lines with versions you don't need/want testing for.
-env:
- - CABALVER=1.18 GHCVER=7.6.3 WAIBOUND=2
- - CABALVER=1.18 GHCVER=7.8.4 WAIBOUND=2
- # - CABALVER=1.22 GHCVER=7.10.1 WAIBOUND=2
+matrix:
+  include:
+    - env: CABALVER=1.16 GHCVER=7.6.3 WAIBOUND=2
+      addons: {apt: {packages: [cabal-install-1.16,ghc-7.6.3], sources: [hvr-ghc]}}
+    - env: CABALVER=1.18 GHCVER=7.8.4 WAIBOUND=2
+      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
 
- - CABALVER=1.18 GHCVER=7.6.3 WAIBOUND=3
- - CABALVER=1.18 GHCVER=7.8.4 WAIBOUND=3
- - CABALVER=1.22 GHCVER=7.10.1 WAIBOUND=3
+    - env: CABALVER=1.16 GHCVER=7.6.3 WAIBOUND=3
+      addons: {apt: {packages: [cabal-install-1.16,ghc-7.6.3], sources: [hvr-ghc]}}
+    - env: CABALVER=1.18 GHCVER=7.8.4 WAIBOUND=3
+      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
+    - env: CABALVER=1.22 GHCVER=7.10.3 WAIBOUND=3
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3],sources: [hvr-ghc]}}
 
- - CABALVER=1.18 GHCVER=7.6.3 WAIBOUND=9
- - CABALVER=1.18 GHCVER=7.8.4 WAIBOUND=9
- - CABALVER=1.22 GHCVER=7.10.1 WAIBOUND=9
+    - env: CABALVER=1.16 GHCVER=7.6.3 WAIBOUND=9
+      addons: {apt: {packages: [cabal-install-1.16,ghc-7.6.3], sources: [hvr-ghc]}}
+    - env: CABALVER=1.18 GHCVER=7.8.4 WAIBOUND=9
+      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
+    - env: CABALVER=1.22 GHCVER=7.10.3 WAIBOUND=9
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3],sources: [hvr-ghc]}}
 
-# Note: the distinction between `before_install` and `install` is not
-#       important.
 before_install:
- - case "$HPVER" in
-    "") ;;
+  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
 
-    *)
-      export GHCVER=unknown ;
-      echo "unknown/invalid Haskell Platform requested" ;
-      exit 1 ;;
-
-   esac
-
- - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
- - travis_retry sudo apt-get update
- - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER
- - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
-
- # install phantomjs 2
- - wget https://s3.amazonaws.com/travis-phantomjs/phantomjs-2.0.0-ubuntu-12.04.tar.bz2
- - tar -xjf phantomjs-2.0.0-ubuntu-12.04.tar.bz2
- - sudo rm -rf /usr/local/phantomjs/bin/phantomjs
- - sudo mv phantomjs /usr/local/phantomjs/bin/phantomjs
- - phantomjs --version
+  # install phantomjs 2
+  - mkdir travis-phantomjs-2.0
+  - wget https://s3.amazonaws.com/travis-phantomjs/phantomjs-2.0.0-ubuntu-12.04.tar.bz2 -O $PWD/travis-phantomjs-2.0/phantomjs-2.0.0-ubuntu-12.04.tar.bz2
+  - tar -xvf $PWD/travis-phantomjs-2.0/phantomjs-2.0.0-ubuntu-12.04.tar.bz2 -C $PWD/travis-phantomjs-2.0
+  - export PATH=$PWD/travis-phantomjs-2.0:$PATH
+  - phantomjs --version
 
 install:
- - cabal --version
- - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
- - travis_retry cabal update
- - cabal install --only-dependencies --enable-tests --enable-benchmarks --constraint="wai<$WAIBOUND"
+  - cabal --version
+  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+  - travis_retry cabal update
+  - cabal install --only-dependencies --enable-tests --enable-benchmarks --constraint="wai<$WAIBOUND"
 
 # Here starts the actual work to be performed for the package under
 # test; any command which exits with a non-zero exit code causes the
 # build to fail.
 script:
- - if [ -f configure.ac ]; then autoreconf -i; fi
- # -v2 provides useful information for debugging
- - cabal configure --enable-tests --enable-benchmarks -v2 --constraint="wai<$WAIBOUND"
+  - if [ -f configure.ac ]; then autoreconf -i; fi
+  - cabal configure --enable-tests --enable-benchmarks -v2 --constraint="wai<$WAIBOUND"
+  - cabal build
+  - cabal test --show-details=always
+  - cabal check
+  - cabal sdist
 
- # this builds all libraries and executables
- # (including tests/benchmarks)
- - cabal build
-
- - cabal test --show-details=always
- - cabal check
-
- # tests that a source-distribution can be generated
- - cabal sdist
-
- # check that the generated source-distribution can be built & installed
- - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
-   (cd dist && cabal install --force-reinstalls "$SRC_TGZ" --constraint="wai<$WAIBOUND")
+  # check that the generated source-distribution can be built & installed
+  - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
+    (cd dist && cabal install --force-reinstalls "$SRC_TGZ" --constraint="wai<$WAIBOUND")
 

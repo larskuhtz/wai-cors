@@ -25,6 +25,7 @@ Copyright:
 Category: HTTP, Network, Web, Yesod
 Build-type: Simple
 Cabal-version: >= 1.14.0
+tested-with: GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10.3
 
 data-files:
     README.md
