@@ -119,11 +119,13 @@ import Prelude.Unicode
 import qualified Text.Parser.Char as P
 import qualified Text.Parser.Combinators as P
 
+{-
 #if MIN_VERSION_wai(2,0,0)
 type ReqMonad = IO
 #else
 type ReqMonad = ResourceT IO
 #endif
+-}
 
 -- | Origins are expected to be formated as described in
 -- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2).
@@ -351,13 +353,13 @@ cors policyPattern app r
             else res $ corsFailure (B8.pack e)
 
         -- Match request origin with corsOrigins from policy
-        let respOrigin = case corsOrigins policy of
+        let respOriginOrErr = case corsOrigins policy of
                 Nothing → return Nothing
                 Just (originList, withCreds) → if origin `elem` originList
                     then Right $ Just (origin, withCreds)
                     else Left $ "Unsupported origin: " ⊕ B8.unpack origin
 
-        case respOrigin of
+        case respOriginOrErr of
             Left e → err e
             Right respOrigin → do
 
