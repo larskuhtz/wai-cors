@@ -24,7 +24,17 @@ matrix:
     - env: CABALVER=1.22 GHCVER=7.10.3 WAIBOUND=9
       addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3],sources: [hvr-ghc]}}
 
+cache:
+  directories:
+    - $HOME/.cabsnap/${WAIBOUND}
+    - $HOME/.cabal/packages
+
+before_cache:
+  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
+  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.tar
+
 before_install:
+  - unset CC
   - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
 
   # install phantomjs 2
@@ -37,8 +47,41 @@ before_install:
 install:
   - cabal --version
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-  - travis_retry cabal update
-  - cabal install --only-dependencies --enable-tests --enable-benchmarks --constraint="wai<$WAIBOUND"
+
+  # Cache Logic
+
+  - if [ -f $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz ];
+    then
+      zcat $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz >
+           $HOME/.cabal/packages/hackage.haskell.org/00-index.tar;
+    fi
+  - travis_retry cabal update -v
+  - sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
+  - cabal install --only-dependencies --enable-tests --enable-benchmarks --constraint="wai<$WAIBOUND" --dry -v > installplan.txt
+  - sed -i -e '1,/^Resolving /d' installplan.txt; cat installplan.txt
+
+  # check whether current requested install-plan matches cached package-db snapshot
+  - if diff -u installplan.txt $HOME/.cabsnap/${WAIBOUND}/installplan.txt;
+    then
+      echo "cabal build-cache HIT";
+      rm -rfv .ghc;
+      cp -a $HOME/.cabsnap/${WAIBOUND}/ghc $HOME/.ghc;
+      cp -a $HOME/.cabsnap/${WAIBOUND}/lib $HOME/.cabsnap/${WAIBOUND}/share $HOME/.cabsnap/${WAIBOUND}/bin $HOME/.cabal/;
+    else
+      echo "cabal build-cache MISS";
+      rm -rf $HOME/.cabsnap/${WAIBOUND};
+      mkdir -p $HOME/.ghc $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin;
+      cabal install --only-dependencies --enable-tests --enable-benchmarks --constraint="wai<$WAIBOUND";
+    fi
+
+  # snapshot package-db on cache miss
+  - if [ ! -d $HOME/.cabsnap/${WAIBOUND} ];
+    then
+       echo "snapshotting package-db to build-cache";
+       mkdir -p $HOME/.cabsnap/${WAIBOUND};
+       cp -a $HOME/.ghc $HOME/.cabsnap/${WAIBOUND}/ghc;
+       cp -a $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/${WAIBOUND}/;
+    fi
 
 # Here starts the actual work to be performed for the package under
 # test; any command which exits with a non-zero exit code causes the
