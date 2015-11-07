@@ -1,3 +1,10 @@
+0.2.4
+=====
+
+*   Fix [bug #1](https://github.com/larskuhtz/wai-cors/issues/1).
+    Response header `Vary: Origin` is now included when `corsVaryOrigin`
+    is `True` and `corsOrigins` does not equal `Nothing`.
+
 0.2.3
 =====
 
