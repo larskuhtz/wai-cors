@@ -57,7 +57,7 @@ tests = testGroup "unit tests"
 
 test_originsAny ∷ Assertion
 test_originsAny = corsSession policy $ do
-    resp <- request get
+    resp ← request get
     assertHeader "Access-Control-Allow-Origin" "*" resp
     assertStatus 200 resp
   where
@@ -67,7 +67,7 @@ test_originsAny = corsSession policy $ do
 
 test_originsNull ∷ Assertion
 test_originsNull = corsSession policy $ do
-    resp <- request get
+    resp ← request get
     assertHeader "Access-Control-Allow-Origin" "null" resp
     assertStatus 200 resp
   where
@@ -77,7 +77,7 @@ test_originsNull = corsSession policy $ do
 
 test_missingRequireOrigin ∷ Assertion
 test_missingRequireOrigin = corsSession policy $ do
-    resp <- request $ defaultRequest { WAI.requestMethod = "GET" }
+    resp ← request $ defaultRequest { WAI.requestMethod = "GET" }
     assertStatus 400 resp
   where
     policy = simpleCorsResourcePolicy
@@ -86,7 +86,7 @@ test_missingRequireOrigin = corsSession policy $ do
 
 test_requireOrigin ∷ Assertion
 test_requireOrigin = corsSession policy $ do
-    resp <- request get
+    resp ← request get
     assertStatus 200 resp
   where
     policy = simpleCorsResourcePolicy
@@ -95,7 +95,7 @@ test_requireOrigin = corsSession policy $ do
 
 test_anyOrigin ∷ Assertion
 test_anyOrigin = corsSession policy $ do
-    resp <- request get
+    resp ← request get
     assertStatus 200 resp
   where
     policy = simpleCorsResourcePolicy
@@ -104,7 +104,7 @@ test_anyOrigin = corsSession policy $ do
 
 test_varyOriginHeader ∷ Assertion
 test_varyOriginHeader = corsSession policy $ do
-    resp <- request put
+    resp ← request put
     assertStatus 200 resp
     assertHeader "Vary" "Origin" resp
   where
@@ -115,7 +115,7 @@ test_varyOriginHeader = corsSession policy $ do
 
 test_varyOriginNoHeader ∷ Assertion
 test_varyOriginNoHeader = corsSession policy $ do
-    resp <- request put
+    resp ← request put
     assertStatus 200 resp
     assertNoHeader "Vary" resp
   where

@@ -98,11 +98,10 @@ import Control.Monad.Trans.Except
 import Control.Monad.Trans.Resource
 #endif
 
-import qualified Data.Attoparsec.ByteString as AttoParsec
+import qualified Data.Attoparsec.ByteString.Char8 as P
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy.Char8 as LB8
 import qualified Data.CaseInsensitive as CI
-import qualified Data.CharSet as CS
 import Data.List (intersect, (\\), union)
 import Data.Maybe (catMaybes)
 #if ! MIN_VERSION_base(4,8,0)
@@ -115,9 +114,6 @@ import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wai as WAI
 
 import Prelude.Unicode
-
-import qualified Text.Parser.Char as P
-import qualified Text.Parser.Combinators as P
 
 {-
 #if MIN_VERSION_wai(2,0,0)
@@ -412,7 +408,7 @@ cors policyPattern app r
     hdrRequestHeader policy = case lookup "Access-Control-Request-Headers" (WAI.requestHeaders r) of
         Nothing → return []
         Just hdrsBytes → do
-            hdrs ← either throwError return $ AttoParsec.parseOnly httpHeaderNameListParser hdrsBytes
+            hdrs ← either throwError return $ P.parseOnly httpHeaderNameListParser hdrsBytes
             if hdrs `isSubsetOf` supportedHeaders
                 then return [("Access-Control-Allow-Headers", hdrLI supportedHeaders)]
                 else throwError
@@ -509,17 +505,26 @@ isSimple method headers
 
 -- | Valid characters for HTTP header names according to RFC2616 (section 4.2)
 --
-httpHeaderNameCharSet ∷ CS.CharSet
-httpHeaderNameCharSet = CS.range (toEnum 33) (toEnum 126) CS.\\ CS.fromList "()<>@,;:\\\"/[]?={}"
+isHttpHeaderNameChar ∷ Char → Bool
+isHttpHeaderNameChar c = (c ≥ toEnum 33) && (c ≤ toEnum 126) && P.notInClass "()<>@,;:\\\"/[]?={}" c
 
-httpHeaderNameParser ∷ P.CharParsing μ ⇒ μ HTTP.HeaderName
-httpHeaderNameParser = fromString <$> P.some (P.oneOfSet httpHeaderNameCharSet) P.<?> "HTTP Header Name"
+httpHeaderNameParser ∷ P.Parser HTTP.HeaderName
+httpHeaderNameParser = fromString <$> P.many1 (P.satisfy isHttpHeaderNameChar) P.<?> "HTTP Header Name"
 
 -- -------------------------------------------------------------------------- --
 -- Generic Tools
 
-httpHeaderNameListParser ∷ P.CharParsing μ ⇒ μ [HTTP.HeaderName]
-httpHeaderNameListParser = P.spaces *> P.sepBy (httpHeaderNameParser <* P.spaces) (P.char ',') <* P.spaces
+-- | A comma separated list of whitespace surounded HTTP header names.
+--
+-- Note that 'P.space' includes @SP@ (32), @HT@ (9), @LF@ (10), @VT@ (11),
+-- @NP@ (12), and @CR@ (13). RFC 2616 (2.2) only defines @SP@ (32) and
+-- @LWS = [CRLF] 1*(SP | HT)@ as whitespace. That's fine here since neither
+-- of these characters is allowed in header names.
+--
+httpHeaderNameListParser ∷ P.Parser [HTTP.HeaderName]
+httpHeaderNameListParser = spaces *> P.sepBy (httpHeaderNameParser <* spaces) (P.char ',') <* spaces
+  where
+    spaces = P.many' P.space
 
 sshow ∷ (IsString α, Show β) ⇒ β → α
 sshow = fromString ∘ show

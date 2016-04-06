@@ -73,19 +73,17 @@ Library
         base-unicode-symbols >= 0.2.2.3,
         bytestring >= 0.10.0.2,
         case-insensitive >= 1.0.0.1,
-        charset >= 0.3.7,
-        http-types >= 0.8.0,
-        parsers >= 0.11
+        http-types >= 0.8.0
 
-    if flag (wai-1)
+    if flag(wai-1) && !flag(wai-2)
         build-depends:
             wai < 2.0,
             resourcet >= 0.4,
             transformers < 0.4
-    if flag (wai-2)
+    if !flag(wai-1) && flag(wai-2)
         build-depends:
             wai < 3.0 && >= 2.0
-    if ! flag (wai-1) && ! flag (wai-2)
+    if !flag(wai-1) && !flag(wai-2)
         build-depends:
             wai >= 3.0
 
