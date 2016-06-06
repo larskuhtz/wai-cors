@@ -1,3 +1,10 @@
+0.2.5
+=====
+
+*   Support GHC-8.0.1.
+
+*   Removed dependencies on parsers package.
+
 0.2.4
 =====
 
