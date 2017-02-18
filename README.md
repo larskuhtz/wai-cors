@@ -68,7 +68,7 @@ The result of following curl command will include the HTTP response
 header `Access-Control-Allow-Origin: *`.
 
 ```.bash
-curl -i http://127.0.0.1:8888 -H 'Origin: 127.0.0.1' -v
+curl -i http://127.0.0.1:8080 -H 'Origin: 127.0.0.1' -v
 ```
 
 Documentation for more general usage can be found in the module
