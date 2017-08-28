@@ -445,9 +445,9 @@ cors policyPattern app r
 --
 -- This middleware does not check if the resource corresponds to the
 -- restrictions for simple requests. This is in accordance with
--- <http://www.w3.org/TR/cors/>. The client (user-agent) is supposed to
--- enforcement CORS policy. The role of the server is to provide the client
--- with the respective policy constraints.
+-- <http://www.w3.org/TR/cors/>. It is the responsibility of the 
+-- client (user-agent) to enforce CORS policy. The role of the server
+-- is to provide the client with the respective policy constraints.
 --
 -- It is out of the scope of the this module if the server chooses to
 -- enforce rules on its resources in relation to CORS policy itself.
