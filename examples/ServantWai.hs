@@ -22,17 +22,17 @@ type API = "users" :> Get '[JSON] [User]
 
 -- | Configure an Application with a CORS policy
 app :: Application
-app = (cors (const $ Just policy)) $ serve api server
-    where policy = CorsResourcePolicy
-                    { corsOrigins = Nothing
-                    , corsMethods = ["POST"]
-                    , corsRequestHeaders = []
-                    , corsExposedHeaders = Nothing
-                    , corsMaxAge = Nothing
-                    , corsVaryOrigin = False
-                    , corsRequireOrigin = False
-                    , corsIgnoreFailures = True
-                    }
+app = (cors (const policy)) $ serve api server
+  where policy = Just CorsResourcePolicy {
+        corsOrigins = Nothing
+        , corsMethods = ["GET"]
+        , corsRequestHeaders = ["authorization", "content-type"]
+        , corsExposedHeaders = Nothing
+        , corsMaxAge = Just $ 60*60*24 -- one day
+        , corsVaryOrigin = False
+        , corsRequireOrigin = True
+        , corsIgnoreFailures = False
+      }
 
 api :: Proxy API
 api = Proxy
