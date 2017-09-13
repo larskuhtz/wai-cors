@@ -40,11 +40,7 @@ before_install:
   - unset CC
   - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
 
-  # install phantomjs 2
-  - mkdir travis-phantomjs-2.0
-  - wget https://s3.amazonaws.com/travis-phantomjs/phantomjs-2.0.0-ubuntu-12.04.tar.bz2 -O $PWD/travis-phantomjs-2.0/phantomjs-2.0.0-ubuntu-12.04.tar.bz2
-  - tar -xvf $PWD/travis-phantomjs-2.0/phantomjs-2.0.0-ubuntu-12.04.tar.bz2 -C $PWD/travis-phantomjs-2.0
-  - export PATH=$PWD/travis-phantomjs-2.0:$PATH
+  # print phantomjs 2 version
   - phantomjs --version
 
 install:
