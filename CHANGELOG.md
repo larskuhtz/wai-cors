@@ -1,3 +1,13 @@
+0.2.6 (unreleased)
+==================
+
+*   Removed ghc-7.6.3 and versions of wai<3.0 from the CI test matrix.
+    These versions are still supported in the code but cabal may need some
+    manual help to resolve dependencies.
+
+*   Fixes and improvements to the documentation. Thanks to Frederik Hanghøj
+    Iversen and Alex Collins.
+
 0.2.5
 =====
 
