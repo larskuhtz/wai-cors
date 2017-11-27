@@ -156,7 +156,7 @@ data CorsResourcePolicy = CorsResourcePolicy
 
     -- | Field names of HTTP request headers that are allowed in CORS requests.
     -- Header names that are included in 'simpleHeaders', except for
-    -- @content-type@, are implicitely included an thus optional in this list.
+    -- @content-type@, are implicitly included and thus optional in this list.
     --
     , corsRequestHeaders ∷ ![HTTP.HeaderName]
 
