@@ -30,7 +30,7 @@
 -- complying with the CORS standard it enables the client (i.e. the web
 -- browser) to enforce the CORS policy. For application authors it is strongly
 -- recommended to take into account the security considerations in section 6.3
--- of <http://wwww.w3.org/TR/cors>. In particular the application should check
+-- of <http://www.w3.org/TR/cors>. In particular the application should check
 -- that the value of the @Origin@ header matches it's expectations.
 --
 -- = Websockets
