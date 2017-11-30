@@ -137,7 +137,7 @@ data CorsResourcePolicy = CorsResourcePolicy
     --
     -- A value of 'Nothing' indicates unrestricted cross-origin sharing and
     -- results in @*@ as value for the @Access-Control-Allow-Origin@ HTTP
-    -- response header.
+    -- response header. Note if you send @*@, credentials cannot be sent with the request.
     --
     -- A value other than 'Nothing' is a tuple that consists of a list of
     -- origins each with a Boolean flag that indicates if credentials are used
@@ -147,6 +147,10 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2). In
     -- particular the string @*@ is not a valid origin (but the string @null@
     -- is).
+    --
+    -- Credentials include cookies, authorization headers and TLS client certificates.
+    -- For credentials to be sent with requests, the @withCredentials@ setting of
+    -- @XmlHttpRequest@ in the browser must be set to @true@.
     --
        corsOrigins ∷ !(Maybe ([Origin], Bool))
 
@@ -160,11 +164,14 @@ data CorsResourcePolicy = CorsResourcePolicy
     --
     , corsRequestHeaders ∷ ![HTTP.HeaderName]
 
-    -- | Field names of HTTP headers that are exposed on the client.
+    -- | Field names of HTTP headers that are exposed to the client in the response.
     --
     , corsExposedHeaders ∷ !(Maybe [HTTP.HeaderName])
 
-    -- | Number of seconds that the response may be cached by the client.
+    -- | Number of seconds that the OPTIONS preflight response may be cached by the client.
+    --
+    -- Tip: Set this to 'Nothing' while testing your CORS implementation, then increase
+    -- it once you deploy to production.
     --
     , corsMaxAge ∷ !(Maybe Int)
 
@@ -202,6 +209,8 @@ data CorsResourcePolicy = CorsResourcePolicy
     --
     -- * an response with HTTP status 400 (bad request) and short
     --   error message is returned if this field is 'False'.
+    --
+    -- Note: Your application needs to will receive preflight OPTIONS requests if set to 'True'.
     --
     -- @since 0.2
     --
@@ -285,7 +294,7 @@ simpleCorsResourcePolicy = CorsResourcePolicy
 -- a preflight request in cases when it wouldn't be required.
 --
 -- For application authors it is strongly recommended to take into account the
--- security considerations in section 6.3 of <http://wwww.w3.org/TR/cors>.
+-- security considerations in section 6.3 of <http://www.w3.org/TR/cors>.
 --
 -- /TODO/
 --
@@ -458,7 +467,7 @@ simpleCors = cors (const $ Just simpleCorsResourcePolicy)
 -- -------------------------------------------------------------------------- --
 -- Definition from Standards
 
--- | Simple HTTP response headers as defined in <http://www.w3.org/TR/cors/>
+-- | Simple HTTP response headers as defined in <https://www.w3.org/TR/cors/#simple-response-header>
 --
 simpleResponseHeaders ∷ [HTTP.HeaderName]
 simpleResponseHeaders =
@@ -470,6 +479,7 @@ simpleResponseHeaders =
     , "Pragma"
     ]
 
+-- | Simple HTTP headers are defined in <https://www.w3.org/TR/cors/#simple-header>
 simpleHeaders ∷ [HTTP.HeaderName]
 simpleHeaders =
     [ "Accept"
@@ -478,6 +488,7 @@ simpleHeaders =
     , "Content-Type"
     ]
 
+-- | Simple content types are defined in <https://www.w3.org/TR/cors/#simple-header>
 simpleContentTypes ∷ [CI.CI B8.ByteString]
 simpleContentTypes =
     [ "application/x-www-form-urlencoded"
@@ -486,7 +497,7 @@ simpleContentTypes =
     ]
 
 
--- | Simple HTTP methods as defined in <http://www.w3.org/TR/cors/>
+-- | Simple HTTP methods as defined in <https://www.w3.org/TR/cors/#simple-method>
 --
 simpleMethods ∷ [HTTP.Method]
 simpleMethods =
@@ -495,6 +506,9 @@ simpleMethods =
     , "POST"
     ]
 
+-- | Whether the given method and headers constitute a simple request,
+-- i.e. the method is simple, all headers are simple, and, if a POST request,
+-- the content-type is simple.
 isSimple ∷ HTTP.Method → HTTP.RequestHeaders → Bool
 isSimple method headers
     = method `elem` simpleMethods
