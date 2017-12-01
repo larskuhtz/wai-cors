@@ -48,7 +48,6 @@ defined in [http://www.w3.org/TR/cors](http://www.w3.org/TR/cors)) in a
 [scotty](http://hackage.haskell.org/package/scotty) application.
 
 ```.haskell
-{-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main
@@ -58,10 +57,10 @@ module Main
 import Network.Wai.Middleware.Cors
 import Web.Scotty
 
-main ∷ IO ()
+main :: IO ()
 main = scotty 8080 $ do
     middleware simpleCors
-    matchAny  "/" $ text "Success"
+    matchAny "/" $ text "Success"
 ```
 
 The result of following curl command will include the HTTP response
