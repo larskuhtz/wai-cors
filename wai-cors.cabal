@@ -124,9 +124,9 @@ Test-Suite phantomjs
         build-depends:
             filepath < 1.4.1.2
 
-    -- we only build the tests suite with the most recent wai version
-    -- cabal fails to resolves the old dependencies otherwise.
-    if flag (wai-1) || flag (wai-2)
+    -- We only build the tests suite with the more recent versions of wai and ghc.
+    -- Cabal fails to resolves the old dependencies otherwise.
+    if flag (wai-1) || flag (wai-2) || impl(ghc < 7.10)
         buildable: False
     else
         build-depends:
@@ -151,9 +151,9 @@ Test-Suite unit-tests
         tasty-hunit >= 0.9,
         wai-cors
 
-    -- we only build the tests suite with the most recent wai version
-    -- cabal fails to resolves the old dependencies otherwise.
-    if flag (wai-1) || flag (wai-2)
+    -- We only build the tests suite with the more recent versions of wai and ghc.
+    -- Cabal fails to resolves the old dependencies otherwise.
+    if flag (wai-1) || flag (wai-2) || impl(ghc < 7.10)
         buildable: False
     else
         build-depends:
