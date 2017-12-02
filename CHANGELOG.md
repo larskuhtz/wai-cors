@@ -6,7 +6,7 @@
     manual help to resolve dependencies.
 
 *   Fixes and improvements to the documentation. Thanks to Frederik Hanghøj
-    Iversen and Alex Collins.
+    Iversen, Alex Collins, and Maximilian Tagher.
 
 0.2.5
 =====
