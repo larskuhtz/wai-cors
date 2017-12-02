@@ -1,10 +1,10 @@
 -- ------------------------------------------------------ --
--- Copyright © 2015-2016 Lars Kuhtz <lakuhtz@gmail.com>
+-- Copyright © 2015-2017 Lars Kuhtz <lakuhtz@gmail.com>
 -- Copyright © 2014 AlephCloud Systems, Inc.
 -- ------------------------------------------------------ --
 
 Name: wai-cors
-Version: 0.2.5
+Version: 0.2.6
 Synopsis: CORS for WAI
 
 Description:
@@ -20,20 +20,21 @@ License-file: LICENSE
 Author: Lars Kuhtz <lakuhtz@gmail.com>
 Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 Copyright:
-    (c) 2015-2016 Lars Kuhtz <lakuhtz@gmail.com>,
+    (c) 2015-2017 Lars Kuhtz <lakuhtz@gmail.com>,
     (c) 2014 AlephCloud Systems, Inc.
 Category: HTTP, Network, Web, Yesod
 Build-type: Simple
 Cabal-version: >= 1.14.0
-tested-with: GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2
+tested-with: GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.1, GHC == 8.2.2
 
 data-files:
     README.md
     CHANGELOG.md
-    constraints
     test/index.html
     test/phantomjs.js
     examples/Scotty.hs
+    examples/Wai.hs
+    examples/ServantWai.hs
 
 source-repository head
     type: git
@@ -43,7 +44,7 @@ source-repository head
 source-repository this
     type: git
     location: https://github.com/larskuhtz/wai-cors
-    tag: 0.2.5
+    tag: 0.2.6
 
 flag transformers-3
     description: use transformers<0.3 (this is set automatically)

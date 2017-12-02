@@ -1,4 +1,4 @@
-0.2.6 (unreleased)
+0.2.6 (2017-12-01)
 ==================
 
 *   Removed ghc-7.6.3 and versions of wai<3.0 from the CI test matrix.
