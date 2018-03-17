@@ -1,5 +1,5 @@
 -- ------------------------------------------------------ --
--- Copyright © 2015-2017 Lars Kuhtz <lakuhtz@gmail.com>
+-- Copyright © 2015-2018 Lars Kuhtz <lakuhtz@gmail.com>
 -- Copyright © 2014 AlephCloud Systems, Inc.
 -- ------------------------------------------------------ --
 
@@ -20,12 +20,12 @@ License-file: LICENSE
 Author: Lars Kuhtz <lakuhtz@gmail.com>
 Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 Copyright:
-    (c) 2015-2017 Lars Kuhtz <lakuhtz@gmail.com>,
+    (c) 2015-2018 Lars Kuhtz <lakuhtz@gmail.com>,
     (c) 2014 AlephCloud Systems, Inc.
 Category: HTTP, Network, Web, Yesod
 Build-type: Simple
 Cabal-version: >= 1.14.0
-tested-with: GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.1, GHC == 8.2.2
+tested-with: GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.1, GHC == 8.2.2, GHC == 8.4.1
 
 data-files:
     README.md
