@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -7,7 +6,7 @@
 -- |
 -- Module: Server
 -- Description: Test HTTP server for wai-cors
--- Copyright: © 2015 Lars Kuhtz <lakuhtz@gmail.com>.
+-- Copyright: © 2015-2018 Lars Kuhtz <lakuhtz@gmail.com>.
 -- License: MIT
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: experimental
@@ -15,10 +14,6 @@
 module Server
 ( main
 ) where
-
-#ifndef MIN_VERSION_wai
-#define MIN_VERSION_wai(a,b,c) 1
-#endif
 
 import Control.Concurrent
 import Control.Exception
@@ -46,15 +41,9 @@ server = cors corsPolicy $ \request →
         "cors":_ → corsapp request
         _ → testapp
   where
-#if MIN_VERSION_wai(2,0,0)
     testapp respond = respond $ WAI.responseFile HTTP.status200 [] "index.html" Nothing
     corsapp = WS.websocketsOr WS.defaultConnectionOptions wsserver $ \_ respond →
         respond $ WAI.responseLBS HTTP.status200 [] "Success"
-#else
-    testapp = WAI.responseFile HTTP.status200 [] "index.html" Nothing
-    corsapp = WS.websocketsOr WS.defaultConnectionOptions wsserver $ \_ →
-        WAI.responseLBS HTTP.status200 [] "Success"
-#endif
 
 -- -------------------------------------------------------------------------- --
 -- CORS Policy
@@ -96,7 +85,7 @@ wsserver pc = do
 -- Note that Chrome sends @Origin: null@ when loaded from a "file://..." URL,
 -- PhantomJS sends "file://".
 --
-nonSimplePolicy :: CorsResourcePolicy
+nonSimplePolicy ∷ CorsResourcePolicy
 nonSimplePolicy = CorsResourcePolicy
     { corsOrigins = Just (["http://localhost:8080", "null", "file://"], False)
     , corsMethods = ["PUT"]
