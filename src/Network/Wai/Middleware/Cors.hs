@@ -251,14 +251,15 @@ data CorsResourcePolicy = CorsResourcePolicy
 simpleCorsResourcePolicy ∷ CorsResourcePolicy
 simpleCorsResourcePolicy = CorsResourcePolicy
     { corsOrigins = Nothing
-    , corsMethods = simpleMethods
+    , corsMethods = simpleCorsMethods
     , corsRequestHeaders = []
     , corsExposedHeaders = Nothing
     , corsMaxAge = Nothing
     , corsVaryOrigin = False
     , corsRequireOrigin = False
     , corsIgnoreFailures = False
-    }
+    } where
+  simpleCorsMethods = ["HEAD", "GET", "PUT", "POST", "DELETE", "OPTIONS"]
 
 -- | A Cross-Origin resource sharing (CORS) middleware.
 --
