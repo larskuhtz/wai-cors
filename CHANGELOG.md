@@ -1,3 +1,9 @@
+0.2.7 (2019-06-06)
+==================
+
+*   Remove support for `wai<3` and older versions of GHC from the code base.
+*   Fix a documentation bug [#23](https://github.com/larskuhtz/wai-cors/issues/23).
+
 0.2.6 (2017-12-01)
 ==================
 

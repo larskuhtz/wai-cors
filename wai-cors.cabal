@@ -4,7 +4,7 @@
 -- ------------------------------------------------------ --
 
 Name: wai-cors
-Version: 0.2.6
+Version: 0.2.7
 Synopsis: CORS for WAI
 
 Description:
@@ -49,7 +49,7 @@ source-repository head
 source-repository this
     type: git
     location: https://github.com/larskuhtz/wai-cors
-    tag: 0.2.6
+    tag: 0.2.7
 
 Library
     default-language: Haskell2010
