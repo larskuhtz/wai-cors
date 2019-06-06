@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UnicodeSyntax #-}
@@ -7,7 +5,7 @@
 -- |
 -- Module: UnitTests
 -- Description: Unit Tests for wai-cors
--- Copyright: © 2015 Lars Kuhtz <lakuhtz@gmail.com>.
+-- Copyright: © 2015-2018 Lars Kuhtz <lakuhtz@gmail.com>.
 -- License: MIT
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: experimental
@@ -23,10 +21,6 @@ module Main
 , options
 , head
 ) where
-
-#ifndef MIN_VERSION_wai
-#define MIN_VERSION_wai(a,b,c) 1
-#endif
 
 import Network.Wai.Middleware.Cors
 import qualified Network.HTTP.Types as HTTP
@@ -146,9 +140,5 @@ head = corsRequest { WAI.requestMethod = "HEAD" }
 options = corsRequest { WAI.requestMethod = "OPTIONS" }
 
 app ∷ WAI.Application
-#if MIN_VERSION_wai(2,0,0)
 app _ respond = respond $ WAI.responseLBS HTTP.status200 [] "Success"
-#else
-app _ = WAI.responseLBS HTTP.status200 [] "Success"
-#endif
 

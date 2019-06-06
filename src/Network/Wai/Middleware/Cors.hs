@@ -1,17 +1,15 @@
-{-# LANGUAGE UnicodeSyntax #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 -- |
 -- Module: Network.Wai.Middleware.Cors
 -- Description: Cross-Origin resource sharing (CORS) for WAI
 -- Copyright:
---     © 2015 Lars Kuhtz <lkuhtz@gmail.com,
+--     © 2015-2019 Lars Kuhtz <lakuhtz@gmail.com,
 --     © 2014 AlephCloud Systems, Inc.
 -- License: MIT
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
@@ -81,22 +79,8 @@ module Network.Wai.Middleware.Cors
 , simpleMethods
 ) where
 
-#ifndef MIN_VESION_base
-#define MIN_VESION_base(x,y,z) 1
-#endif
-
-#ifndef MIN_VESION_wai
-#define MIN_VESION_wai(x,y,z) 1
-#endif
-
-#if ! MIN_VERSION_base(4,8,0)
-import Control.Applicative
-#endif
 import Control.Monad.Error.Class
 import Control.Monad.Trans.Except
-#if ! MIN_VERSION_wai(2,0,0)
-import Control.Monad.Trans.Resource
-#endif
 
 import qualified Data.Attoparsec.ByteString.Char8 as P
 import qualified Data.ByteString.Char8 as B8
@@ -104,9 +88,6 @@ import qualified Data.ByteString.Lazy.Char8 as LB8
 import qualified Data.CaseInsensitive as CI
 import Data.List (intersect, (\\), union)
 import Data.Maybe (catMaybes)
-#if ! MIN_VERSION_base(4,8,0)
-import Data.Monoid (mempty)
-#endif
 import Data.Monoid.Unicode
 import Data.String
 
@@ -114,14 +95,6 @@ import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wai as WAI
 
 import Prelude.Unicode
-
-{-
-#if MIN_VERSION_wai(2,0,0)
-type ReqMonad = IO
-#else
-type ReqMonad = ResourceT IO
-#endif
--}
 
 -- | Origins are expected to be formated as described in
 -- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2).
@@ -140,7 +113,7 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- response header. Note if you send @*@, credentials cannot be sent with the request.
     --
     -- A value other than 'Nothing' is a tuple that consists of a list of
-    -- origins each with a Boolean flag that indicates if credentials are used
+    -- origins and a Boolean flag that indicates if credentials are used
     -- to access the resource via CORS.
     --
     -- Origins must be formated as described in
@@ -315,17 +288,13 @@ simpleCorsResourcePolicy = CorsResourcePolicy
 cors
     ∷ (WAI.Request → Maybe CorsResourcePolicy) -- ^ A value of 'Nothing' indicates that the resource is not available for CORS
     → WAI.Middleware
-#if MIN_VERSION_wai(3,0,0)
 cors policyPattern app r respond
-#else
-cors policyPattern app r
-#endif
     -- We don't handle websockets, even if they include an @Origin@ header
     | isWebSocketsReq r = runApp
 
     | Just policy ← policyPattern r = case hdrOrigin of
 
-        -- No origin header: requect request
+        -- No origin header: reject request
         Nothing → if corsRequireOrigin policy
             then res $ corsFailure "Origin header is missing"
             else runApp
@@ -335,14 +304,8 @@ cors policyPattern app r
 
     | otherwise = runApp
   where
-
-#if MIN_VERSION_wai(3,0,0)
     res = respond
     runApp = app r respond
-#else
-    res = return
-    runApp = app r
-#endif
 
     -- Lookup the HTTP origin request header
     --
@@ -379,11 +342,7 @@ cors policyPattern app r
                         Right headers → res $ WAI.responseLBS HTTP.ok200 (ch ⊕ headers) ""
 
                     -- Actual CORS request
-#if MIN_VERSION_wai(3,0,0)
                     _ → addHeaders (ch ⊕ respCorsHeaders policy) app r respond
-#else
-                    _ → addHeaders (ch ⊕ respCorsHeaders policy) app r
-#endif
 
     -- Compute HTTP response headers for a preflight request
     --
@@ -454,7 +413,7 @@ cors policyPattern app r
 --
 -- This middleware does not check if the resource corresponds to the
 -- restrictions for simple requests. This is in accordance with
--- <http://www.w3.org/TR/cors/>. It is the responsibility of the 
+-- <http://www.w3.org/TR/cors/>. It is the responsibility of the
 -- client (user-agent) to enforce CORS policy. The role of the server
 -- is to provide the client with the respective policy constraints.
 --
@@ -548,27 +507,11 @@ isSubsetOf l1 l2 = intersect l1 l2 ≡ l1
 
 -- | Add HTTP headers to a WAI response
 --
-#if MIN_VERSION_wai(3,0,0)
 addHeaders ∷ HTTP.ResponseHeaders → WAI.Middleware
 addHeaders hdrs app req respond = app req $ \response → do
     let (st, headers, streamHandle) = WAI.responseToStream response
     streamHandle $ \streamBody →
         respond $ WAI.responseStream st (headers ⊕ hdrs) streamBody
-
-#elif MIN_VERSION_wai(2,0,0)
-
-addHeaders ∷ HTTP.ResponseHeaders → WAI.Middleware
-addHeaders hdrs app req = do
-    (st, headers, src) ← WAI.responseToSource <$> app req
-    WAI.responseSource st (headers ⊕ hdrs) <$> src return
-
-#else
-
-addHeaders ∷ HTTP.ResponseHeaders → WAI.Middleware
-addHeaders hdrs app req = do
-    (st, headers, src) ← WAI.responseSource <$> app req
-    return $ WAI.ResponseSource st (headers ⊕ hdrs) src
-#endif
 
 -- | Format a list of 'HTTP.HeaderName's such that it can be used as
 -- an HTTP header value
@@ -580,7 +523,7 @@ hdrLI l = B8.intercalate ", " (map CI.original l)
 -- an HTTP header value
 --
 hdrL ∷ [B8.ByteString] → B8.ByteString
-hdrL l = B8.intercalate ", " l
+hdrL = B8.intercalate ", "
 
 corsFailure
     ∷ B8.ByteString -- ^ body
