@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    name: Build on ${{ matrix.ghc_version }} and ${{ matrix.os }}
+    name: Build with ${{ matrix.ghc }} / ${{ matrix.cabal }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,4 +28,4 @@ jobs:
     - name: Install test dependencies
       run: cabal v2-build --only-dependencies --enable-tests
     - name: Run tests
-      run: cabal v2-test
+      run: cabal v2-test --enable-tests
