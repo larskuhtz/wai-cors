@@ -19,6 +19,8 @@ jobs:
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
+    - name: Update package database
+      run: cabal v2-update
     - name: Install build dependencies
       run: cabal v2-build --only-dependencies
     - name: Build
