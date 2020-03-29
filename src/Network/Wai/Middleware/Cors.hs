@@ -180,10 +180,10 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- * the request is passed on unchanged to the application if this field is
     --   'True' or
     --
-    -- * an response with HTTP status 400 (bad request) and short
+    -- * a response with HTTP status 400 (bad request) and short
     --   error message is returned if this field is 'False'.
     --
-    -- Note: Your application needs to will receive preflight OPTIONS requests if set to 'True'.
+    -- Note: Your application will receive preflight OPTIONS requests if set to 'True'.
     --
     -- @since 0.2
     --
