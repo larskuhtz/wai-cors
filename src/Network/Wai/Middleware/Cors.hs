@@ -528,7 +528,7 @@ hdrL = B8.intercalate ", "
 corsFailure
     ∷ B8.ByteString -- ^ body
     → WAI.Response
-corsFailure msg = WAI.responseLBS HTTP.status400 [("Content-Type", "text/html; charset-utf-8")] (LB8.fromStrict msg)
+corsFailure msg = WAI.responseLBS HTTP.status400 [("Content-Type", "text/plain; charset=utf-8")] (LB8.fromStrict msg)
 
 -- Copied from the [wai-websocket package](https://github.com/yesodweb/wai/blob/master/wai-websockets/Network/Wai/Handler/WebSockets.hs#L21)
 --
