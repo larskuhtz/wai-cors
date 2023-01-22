@@ -8,7 +8,7 @@ Version: 0.2.7
 Synopsis: CORS for WAI
 
 Description:
-    This package provides an implemenation of
+    This package provides an implementation of
     Cross-Origin resource sharing (CORS) for
     <http://hackage.haskell.org/package/wai Wai>
     that aims to be compliant with <http://www.w3.org/TR/cors>.
