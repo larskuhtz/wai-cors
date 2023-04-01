@@ -50,7 +50,7 @@ runPhantomJs = do
     -- FIXME check the version
     findExecutable phantomJsBinaryPath >>= \case
         Nothing → do
-            hPutStrLn stderr $ "Missing PhantomJS exectuable: in order to run this test-suite PhantomJS must be availabe on the system"
+            hPutStrLn stderr $ "Missing PhantomJS executable: in order to run this test-suite PhantomJS must be available on the system"
             exitFailure
         Just _ → return ()
 
