@@ -15,7 +15,7 @@
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: stable
 --
--- An implemenation of Cross-Origin resource sharing (CORS) for WAI that
+-- An implementation of Cross-Origin resource sharing (CORS) for WAI that
 -- aims to be compliant with <http://www.w3.org/TR/cors>.
 --
 -- The function 'simpleCors' enables support of simple cross-origin requests. More
@@ -24,7 +24,7 @@
 --
 -- = Note On Security
 --
--- This implementation doens't include any server side enforcement. By
+-- This implementation doesn't include any server side enforcement. By
 -- complying with the CORS standard it enables the client (i.e. the web
 -- browser) to enforce the CORS policy. For application authors it is strongly
 -- recommended to take into account the security considerations in section 6.3
@@ -96,7 +96,7 @@ import qualified Network.Wai as WAI
 
 import Prelude.Unicode
 
--- | Origins are expected to be formated as described in
+-- | Origins are expected to be formatted as described in
 -- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2).
 -- In particular the string @*@ is not a valid origin (but the string
 -- @null@ is).
@@ -116,7 +116,7 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- origins and a Boolean flag that indicates if credentials are used
     -- to access the resource via CORS.
     --
-    -- Origins must be formated as described in
+    -- Origins must be formatted as described in
     -- <https://www.ietf.org/rfc/rfc6454.txt RFC6454> (section 6.2). In
     -- particular the string @*@ is not a valid origin (but the string @null@
     -- is).
@@ -154,7 +154,7 @@ data CorsResourcePolicy = CorsResourcePolicy
     -- response, thus indicating that the value of the
     -- @Access-Control-Allow-Origin@ header may vary between different requests
     -- for the same resource. This prevents caching of the responses which may
-    -- not apply accross different origins.
+    -- not apply across different origins.
     --
     , corsVaryOrigin ∷ !Bool
 
@@ -271,7 +271,7 @@ simpleCorsResourcePolicy = CorsResourcePolicy
 --
 -- /TODO/
 --
--- * We may consider adding optional enforcment aspects to this module: we may
+-- * We may consider adding optional enforcement aspects to this module: we may
 --   check if a request respects our origin restrictions and we may check that a
 --   CORS request respects the restrictions that we publish in the preflight
 --   responses.
@@ -331,7 +331,7 @@ cors policyPattern app r respond
             Left e → err e
             Right respOrigin → do
 
-                -- Determine headers that are common to actuall responses and preflight responses
+                -- Determine headers that are common to actual responses and preflight responses
                 let ch = commonCorsHeaders respOrigin (corsVaryOrigin policy)
 
                 case WAI.requestMethod r of
@@ -487,7 +487,7 @@ httpHeaderNameParser = fromString <$> P.many1 (P.satisfy isHttpHeaderNameChar) P
 -- -------------------------------------------------------------------------- --
 -- Generic Tools
 
--- | A comma separated list of whitespace surounded HTTP header names.
+-- | A comma separated list of whitespace surrounded HTTP header names.
 --
 -- Note that 'P.space' includes @SP@ (32), @HT@ (9), @LF@ (10), @VT@ (11),
 -- @NP@ (12), and @CR@ (13). RFC 2616 (2.2) only defines @SP@ (32) and

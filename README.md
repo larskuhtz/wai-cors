@@ -85,7 +85,7 @@ cabal test --show-details=streaming
 ```
 
 If [PhantomJS](http://phantomjs.org/) is not available the tests can be
-exectued manually in a modern web-browser as follows.
+executed manually in a modern web-browser as follows.
 
 Start the server application:
 
@@ -96,5 +96,5 @@ ghc -main-is Server Server.hs
 ```
 
 Open the file `test/index.html` in a modern web-browser. On page load a Javascript
-script is exectued that runs the test suite and prints the result on the page.
+script is executed that runs the test suite and prints the result on the page.
 
