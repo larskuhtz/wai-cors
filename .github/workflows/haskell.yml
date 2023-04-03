@@ -1,6 +1,8 @@
 name: Haskell CI
 
-on: [push]
+on:
+  workflow_dispatch:
+  push:
 
 jobs:
   build:
@@ -8,24 +10,32 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        ghc: ['8.4.4', '8.6.5', '8.8.1']
-        cabal: ['3.0']
+        ghc: ['8.10', '9.0', '9.2', '9.4', '9.6']
+        cabal: ['3.10']
         os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Setup Haskell
-      uses: actions/setup-haskell@v1
+      uses: haskell/actions/setup@v2
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
+    - uses: actions/cache@v3
+      name: Cache dist-newstyle
+      with:
+        path: |
+          ~/.cabal/packages
+          ~/.cabal/store
+          dist-newstyle
+        key: ${{ matrix.os }}-${{ matrix.ghc }}-0-cabal
     - name: Update package database
-      run: cabal v2-update
+      run: cabal update
     - name: Install build dependencies
-      run: cabal v2-build --only-dependencies
+      run: cabal build --only-dependencies
     - name: Build
-      run: cabal v2-build --enable-tests
+      run: cabal build --enable-tests
     - name: Install test dependencies
-      run: cabal v2-build --only-dependencies --enable-tests
+      run: cabal build --only-dependencies --enable-tests
     - name: Run tests
-      run: cabal v2-test --enable-tests
+      run: cabal test --enable-tests
