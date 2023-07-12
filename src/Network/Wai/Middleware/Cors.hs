@@ -225,7 +225,7 @@ simpleCorsResourcePolicy ∷ CorsResourcePolicy
 simpleCorsResourcePolicy = CorsResourcePolicy
     { corsOrigins = Nothing
     , corsMethods = simpleMethods
-    , corsRequestHeaders = []
+    , corsRequestHeaders = simpleHeaders
     , corsExposedHeaders = Nothing
     , corsMaxAge = Nothing
     , corsVaryOrigin = False
